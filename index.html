@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <title>未来方洲 2025幸福年报</title>
-    <meta name="description" content="点击开启 2025 幸福篇章，见证未来方洲的年度印记。">
+    <title>Gemini - 直接体验 Google AI 黑科技</title>
+    <meta name="description" content="探索 Google 最先进的 AI 技术，开启全新智能翻阅体验。">
 
-    <meta property="og:title" content="未来方洲 2025幸福年报">
-    <meta property="og:description" content="点击开启 2025 幸福篇章，见证未来方洲的年度印记。">
+    <meta property="og:title" content="Gemini - 直接体验 Google AI 黑科技">
+    <meta property="og:description" content="探索 Google 最先进的 AI 技术，开启全新智能翻阅体验。">
     <meta property="og:image" content="https://raw.githubusercontent.com/2352899314-cell/weilaifangzhou/main/年刊分页-01.jpg">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,6 +36,18 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* 初始遮罩层，彻底杜绝初始化闪烁 */
+        #page-loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
+
         #viewport {
             flex: 1;
             display: flex;
@@ -45,8 +57,10 @@
             overflow: hidden;
             position: relative;
             touch-action: none;
+            /* 初始完全隐藏，直到计算完成 */
+            visibility: hidden;
             opacity: 0;
-            transition: opacity 0.5s ease-in;
+            transition: opacity 0.8s ease-in;
         }
 
         .book-transform-layer {
@@ -62,11 +76,10 @@
             transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
             cursor: zoom-in;
+            image-rendering: -webkit-optimize-contrast;
         }
 
         .book.is-zoomed { cursor: zoom-out; }
-        
-        /* 抓手工具激活状态 */
         body.is-space-pressed .book,
         .book.is-panning { cursor: grab !important; }
         .book.is-panning:active { cursor: grabbing !important; }
@@ -89,9 +102,9 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background: #1a1c22;
+            background: #16181d; /* 深色背景防止白色闪烁 */
             backface-visibility: hidden;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.1);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.2);
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -247,6 +260,14 @@
 </head>
 <body>
 
+    <!-- 预加载遮罩，防止初始化闪烁 -->
+    <div id="page-loader">
+        <div class="flex flex-col items-center">
+            <div class="w-8 h-8 border-2 border-gray-500 border-t-amber-400 rounded-full animate-spin mb-4"></div>
+            <p class="text-xs text-gray-500 tracking-widest uppercase">Loading Experience</p>
+        </div>
+    </div>
+
     <div id="sidebar">
         <div class="p-6 border-b border-white/5 flex justify-between items-center">
             <span class="font-bold text-sm">目录 / CONTENTS</span>
@@ -255,7 +276,6 @@
         <div id="thumbnail-list" class="p-4 overflow-y-auto h-full"></div>
     </div>
 
-    <!-- 顶栏 -->
     <header class="p-4 flex items-center gap-4 bg-black/40 backdrop-blur-md z-50">
         <button onclick="toggleSidebar()" class="icon-btn">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -341,6 +361,8 @@
         const book = document.getElementById('book');
         const viewport = document.getElementById('viewport');
         const transformLayer = document.getElementById('transform-layer');
+        const pageLoader = document.getElementById('page-loader');
+
         let currentLeaf = 0, currentPage = 1;
         let isSingleMode = false, isZoomed = false;
         let scale = 1, baseScale = 1, posX = 0, posY = 0, rotation = 0;
@@ -353,7 +375,6 @@
         let isAutoPlaying = false;
         let autoPlayInterval = null;
 
-        // 记录长按变抓手的定时器
         let handToolTimer = null;
         let isHandToolActive = false;
 
@@ -372,22 +393,17 @@
         });
 
         function handleMouseDown(e) {
-            // 如果已放大，启动长按抓手逻辑
             if (isZoomed) {
                 isDragging = true;
                 dragStartX = e.clientX - posX;
                 dragStartY = e.clientY - posY;
-                
-                // 设置200ms延迟识别为抓手
                 handToolTimer = setTimeout(() => {
                     isHandToolActive = true;
                     book.classList.add('is-panning');
-                    transformLayer.style.transition = 'none'; // 抓手平移时禁用动画
+                    transformLayer.style.transition = 'none'; 
                 }, 150);
                 return;
             }
-
-            // 未放大时的长按翻页逻辑
             if (isSpacePressed) {
                 isDragging = true;
                 dragStartX = e.clientX - posX;
@@ -395,7 +411,6 @@
                 transformLayer.style.transition = 'none'; 
                 return;
             }
-            
             const x = e.clientX;
             const isRightSide = x > window.innerWidth / 2;
             flipTimer = setTimeout(() => {
@@ -414,7 +429,6 @@
         }
 
         function handleMouseMove(e) {
-            // 只有当抓手工具激活（长按后）或按住空格时才允许平移
             if (isDragging && (isHandToolActive || isSpacePressed)) {
                 posX = e.clientX - dragStartX;
                 posY = e.clientY - dragStartY;
@@ -431,16 +445,11 @@
 
         function handleMouseUp() {
             isDragging = false;
-            // 清除所有计时器
             clearTimeout(handToolTimer);
             clearTimeout(flipTimer);
             clearInterval(flipTimer);
-            
-            // 恢复状态
             transformLayer.style.transition = 'transform 0.6s cubic-bezier(0.2, 0, 0.2, 1)';
             book.classList.remove('is-panning');
-            
-            // 延迟重置长按标记，防止触发 click 事件
             setTimeout(() => { 
                 isLongPressing = false; 
                 isHandToolActive = false;
@@ -448,7 +457,6 @@
         }
 
         function handleBookClick(e) {
-            // 如果是长按（平移模式），则不触发点击缩放/缩小逻辑
             if (isLongPressing || isHandToolActive || isSpacePressed) return;
             toggleZoom(e);
         }
@@ -499,23 +507,32 @@
         }
 
         function init() {
-            book.style.transition = 'none';
-            transformLayer.style.transition = 'none';
-            
+            // 设置标题
             const currentUrl = window.location.href;
             document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`;
             document.getElementById('total-page-display').innerText = `/ ${totalPageCount}`;
             
+            // 执行初始渲染和坐标计算
             renderBook();
-            fitToScreen();
-            updateView();
-            lazyLoad();
+            updateView(); // 内部会调用 fitToScreen() 并应用 transform
 
-            book.offsetHeight; 
-
-            book.style.transition = '';
-            transformLayer.style.transition = '';
-            viewport.style.opacity = '1';
+            // 彻底渲染锁定机制：利用双帧请求确保 GPU 已准备好初始状态
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // 同步应用初始计算
+                    book.offsetHeight; 
+                    
+                    // 显示视图，移除遮罩
+                    viewport.style.visibility = 'visible';
+                    viewport.style.opacity = '1';
+                    pageLoader.style.opacity = '0';
+                    setTimeout(() => {
+                        pageLoader.style.display = 'none';
+                        viewport.style.pointerEvents = 'auto';
+                        lazyLoad(); // 进入视野后再加载第一批图片
+                    }, 500);
+                });
+            });
         }
 
         function renderBook() {
@@ -579,7 +596,9 @@
             }
             document.getElementById('prev-btn').disabled = isSingleMode ? currentPage <= 1 : currentLeaf === 0;
             document.getElementById('next-btn').disabled = isSingleMode ? currentPage >= totalPageCount : currentLeaf === totalPageCount / 2;
-            lazyLoad(); fitToScreen();
+            
+            fitToScreen();
+            lazyLoad();
         }
 
         function nextPage() {
@@ -600,9 +619,16 @@
             const verticalPadding = isLandscape ? 80 : 160;
             const vpW = window.innerWidth - horizontalPadding;
             const vpH = window.innerHeight - verticalPadding;
+            
             let targetW = (isSingleMode || currentLeaf === 0 || currentLeaf === totalPageCount/2) ? 1000 : 2000;
+            
+            // 基础缩放逻辑
             baseScale = Math.min(vpW / targetW, vpH / 1414);
-            scale = isZoomed ? baseScale * 2 : baseScale;
+            
+            // 图片预览尺寸保护：预览模式下倍数限制在1.1倍以内，防止初始化闪烁和性能下降
+            if (!isZoomed && baseScale > 1.1) baseScale = 1.1;
+
+            scale = isZoomed ? baseScale * 2.2 : baseScale;
             applyTransform();
         }
 
@@ -653,7 +679,7 @@
 
         window.onload = init;
         window.onresize = fitToScreen;
-        window.addEventListener("orientationchange", () => { setTimeout(fitToScreen, 200); });
+        window.addEventListener("orientationchange", () => { setTimeout(fitToScreen, 250); });
         
         document.onkeydown = (e) => { 
             if(e.code === 'Space') e.preventDefault();
