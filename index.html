@@ -30,22 +30,28 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
             color: #e5e7eb;
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 初始遮罩层，彻底杜绝初始化闪烁 */
+        /* 加载锁：防止初始化时的任何位移动画 */
+        body.is-booting * {
+            transition: none !important;
+            animation: none !important;
+        }
+
         #page-loader {
             position: fixed;
             inset: 0;
             background: var(--bg-color);
-            z-index: 9999;
+            z-index: 10000;
             display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 1;
             transition: opacity 0.5s ease-out;
+            pointer-events: auto;
         }
 
         #viewport {
@@ -57,16 +63,13 @@
             overflow: hidden;
             position: relative;
             touch-action: none;
-            /* 初始完全隐藏，直到计算完成 */
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.8s ease-in;
+            opacity: 0; /* 初始透明 */
         }
 
         .book-transform-layer {
-            transition: transform 0.6s cubic-bezier(0.2, 0, 0.2, 1);
             will-change: transform;
             transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.2, 0, 0.2, 1);
         }
 
         .book {
@@ -74,9 +77,9 @@
             width: calc(var(--book-width) * 2);
             height: var(--book-height);
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
             cursor: zoom-in;
             image-rendering: -webkit-optimize-contrast;
+            transition: transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1);
         }
 
         .book.is-zoomed { cursor: zoom-out; }
@@ -84,54 +87,45 @@
         .book.is-panning { cursor: grab !important; }
         .book.is-panning:active { cursor: grabbing !important; }
 
-        .book.single-mode { width: var(--book-width); }
-
         .page {
             position: absolute;
             width: var(--book-width);
             height: var(--book-height);
             top: 0;
-            right: 0;
+            right: 0; /* 所有页初始在右半部 */
             transform-origin: left center;
-            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
             transform-style: preserve-3d;
             backface-visibility: hidden;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
         }
 
         .page-content {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: #16181d; /* 深色背景防止白色闪烁 */
+            background: #16181d;
             backface-visibility: hidden;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.4);
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .loading-shimmer {
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, #1a1c22 25%, #2a2d35 50%, #1a1c22 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            position: absolute;
-            z-index: 1;
+        .page-content img { 
+            width: 100%; height: 100%; object-fit: contain; 
+            opacity: 0; transition: opacity 0.4s ease;
+            z-index: 2;
         }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .page-content img.loaded { opacity: 1; }
 
         .front::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 40px; height: 100%;
+            content: ''; position: absolute; top: 0; left: 0; width: 40px; height: 100%;
             background: linear-gradient(to right, var(--shadow-intensity) 0%, rgba(0,0,0,0) 100%);
             pointer-events: none;
         }
         .back::after {
-            content: '';
-            position: absolute;
-            top: 0; right: 0; width: 40px; height: 100%;
+            content: ''; position: absolute; top: 0; right: 0; width: 40px; height: 100%;
             background: linear-gradient(to left, var(--shadow-intensity) 0%, rgba(0,0,0,0) 100%);
             pointer-events: none;
         }
@@ -139,138 +133,67 @@
         .back { transform: rotateY(180deg); }
         .page.flipped { transform: rotateY(-180deg); }
 
-        .single-mode .page {
+        /* 单页模式特殊样式覆盖 */
+        .book.single-mode .page {
             transform: none !important;
             display: none;
             right: 0; left: 0; margin: auto;
+            width: 1000px;
         }
-        .single-mode .page.active-single { display: block; }
-        .single-mode .page.active-single .back { display: none; }
-
-        .page-content img { 
-            width: 100%; height: 100%; object-fit: contain; 
-            opacity: 0; transition: opacity 0.4s;
-            position: absolute;
-            z-index: 2;
-        }
-        .page-content img.loaded { opacity: 1; }
+        .book.single-mode .page.active-single { display: block; }
 
         .floating-controls {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--panel-color);
-            padding: 8px 16px;
-            border-radius: 60px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            z-index: 500;
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: bottom 0.3s, opacity 0.3s;
-        }
-
-        @media (orientation: landscape) and (max-height: 500px) {
-            .floating-controls { bottom: 10px; padding: 4px 12px; transform: translateX(-50%) scale(0.9); }
-            header { padding: 8px 15px !important; }
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--panel-color); padding: 8px 16px; border-radius: 60px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            z-index: 500; border: 1px solid rgba(255,255,255,0.08);
         }
 
         .icon-btn {
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%;
-            transition: all 0.2s;
-            color: #9ca3af;
-            cursor: pointer;
-            user-select: none;
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: all 0.2s; color: #9ca3af; cursor: pointer;
         }
         .icon-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: var(--accent-color); }
         .icon-btn.active { color: var(--accent-color); background: rgba(251, 191, 36, 0.1); }
-        .icon-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
         .qr-container {
-            position: fixed;
-            right: 30px;
-            bottom: 30px;
-            z-index: 600;
-            filter: grayscale(100%);
-            opacity: 0.5;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; right: 30px; bottom: 30px; z-index: 600;
+            filter: grayscale(100%); opacity: 0.5; transition: all 0.4s;
         }
         .qr-container:hover { opacity: 1; filter: grayscale(0%); }
-        
         .qr-trigger {
-            width: 48px; height: 48px;
-            background: var(--panel-color);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
+            width: 48px; height: 48px; background: var(--panel-color);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
-
-        .qr-tooltip {
-            position: absolute;
-            bottom: 60px;
-            right: 0;
-            background: white;
-            padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            display: none;
-            width: 160px;
-            text-align: center;
-        }
-        .qr-container:hover .qr-tooltip { display: block; }
-        .qr-tooltip img { width: 136px; height: 136px; margin-bottom: 5px; }
-        .qr-tooltip p { color: #333; font-size: 11px; font-weight: bold; }
 
         #sidebar {
-            position: fixed;
-            left: -320px; top: 0; bottom: 0; width: 300px;
-            background: var(--panel-color);
-            z-index: 1000;
-            transition: left 0.4s ease;
-            backdrop-filter: blur(15px);
-            border-right: 1px solid #333;
+            position: fixed; left: -320px; top: 0; bottom: 0; width: 300px;
+            background: var(--panel-color); z-index: 1000; transition: left 0.4s ease;
+            backdrop-filter: blur(15px); border-right: 1px solid #333;
         }
         #sidebar.open { left: 0; }
 
-        #toast {
-            position: fixed;
-            bottom: 100px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white; padding: 10px 20px; border-radius: 30px;
-            display: none; z-index: 2000;
-            font-size: 13px;
-            backdrop-filter: blur(5px);
-        }
-
         @media (max-width: 768px) {
             .qr-container { bottom: 90px; right: 20px; }
-            .qr-tooltip { display: none !important; }
-            .qr-container.mobile-show { filter: grayscale(0%); opacity: 1; }
-            .qr-container.mobile-show .qr-tooltip { display: block !important; }
             @media (orientation: landscape) { .qr-container { display: none; } }
         }
     </style>
 </head>
-<body>
+<body class="is-booting">
 
-    <!-- 预加载遮罩，防止初始化闪烁 -->
     <div id="page-loader">
         <div class="flex flex-col items-center">
-            <div class="w-8 h-8 border-2 border-gray-500 border-t-amber-400 rounded-full animate-spin mb-4"></div>
-            <p class="text-xs text-gray-500 tracking-widest uppercase">Loading Experience</p>
+            <div class="w-6 h-6 border-2 border-zinc-800 border-t-amber-500 rounded-full animate-spin mb-3"></div>
+            <p class="text-[10px] text-zinc-500 tracking-[0.3em] uppercase">Loading Experience</p>
         </div>
     </div>
 
     <div id="sidebar">
         <div class="p-6 border-b border-white/5 flex justify-between items-center">
-            <span class="font-bold text-sm">目录 / CONTENTS</span>
+            <span class="font-bold text-sm text-white">目录 / CONTENTS</span>
             <button onclick="toggleSidebar()" class="text-gray-500 hover:text-white">✕</button>
         </div>
         <div id="thumbnail-list" class="p-4 overflow-y-auto h-full"></div>
@@ -282,7 +205,7 @@
         </button>
         <h1 class="text-xs font-bold tracking-widest text-gray-400 uppercase">未来方洲 2025幸福年报</h1>
         <div class="flex-1"></div>
-        <button onclick="copyShareLink()" class="icon-btn" title="分享画册">
+        <button onclick="copyShareLink()" class="icon-btn">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
         </button>
     </header>
@@ -304,10 +227,6 @@
     </div>
 
     <div class="qr-container" id="qr-container">
-        <div class="qr-tooltip">
-            <img id="qr-image" src="" alt="手机扫码阅读">
-            <p>手机扫一扫阅读</p>
-        </div>
         <div class="qr-trigger" onclick="toggleMobileQR()">
             <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2v-2zm2 2h2v2h-2v-2zm2-2h2v2h-2v-2zm2 2h2v2h-2v-2zm-2 2h2v2h-2v-2zm0-2h-2v-2h2v2zm-4 4h2v2h-2v-2zm2 2h2v2h-2v-2z"></path></svg>
         </div>
@@ -317,38 +236,30 @@
         <button class="icon-btn" id="autoplay-btn" onclick="toggleAutoPlay()" title="自动播放">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         </button>
-
         <div class="w-px h-6 bg-white/10"></div>
-
         <button class="icon-btn" id="prev-btn" onclick="prevPage()">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></svg>
         </button>
-
         <div class="flex items-center bg-white/5 rounded-full px-4 py-1">
             <input type="text" id="page-jump" class="bg-transparent border-none text-white w-8 text-center text-sm focus:ring-0" value="1" onchange="handleJump(this.value)">
             <span class="text-gray-500 text-xs" id="total-page-display">/ 20</span>
         </div>
-
         <button class="icon-btn" id="next-btn" onclick="nextPage()">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
         </button>
-        
         <div class="w-px h-6 bg-white/10 mx-1"></div>
-        
         <button class="icon-btn" id="rotate-btn" onclick="rotateBook()" title="旋转视图">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
         </button>
-
         <button class="icon-btn" id="mode-toggle" onclick="toggleMode()" title="切换单/双页">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         </button>
-
         <button class="icon-btn" id="zoom-toggle-btn" onclick="toggleZoom(null)" title="缩放">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
         </button>
     </div>
 
-    <div id="toast"></div>
+    <div id="toast" class="fixed bottom-[100px] left-1/2 -translate-x-1/2 bg-black/90 text-white px-5 py-2 rounded-full text-[13px] hidden z-[2000] border border-white/10"></div>
 
     <script>
         const repoBase = "https://raw.githubusercontent.com/2352899314-cell/weilaifangzhou/main/";
@@ -356,196 +267,99 @@
         const imageList = Array.from({length: totalPageCount}, (_, i) => `${repoBase}年刊分页-${(i+1).toString().padStart(2, '0')}.jpg`);
         
         const flipAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-        flipAudio.volume = 0.15;
+        flipAudio.volume = 0.05;
 
         const book = document.getElementById('book');
         const viewport = document.getElementById('viewport');
         const transformLayer = document.getElementById('transform-layer');
-        const pageLoader = document.getElementById('page-loader');
+        const loader = document.getElementById('page-loader');
 
-        let currentLeaf = 0, currentPage = 1;
-        let isSingleMode = false, isZoomed = false;
+        let currentLeaf = 0, currentPage = 1, isSingleMode = false, isZoomed = false;
         let scale = 1, baseScale = 1, posX = 0, posY = 0, rotation = 0;
+        let isDragging = false, dragStartX, dragStartY, flipTimer = null, isLongPressing = false;
+        let isSpacePressed = false, isAutoPlaying = false, autoPlayInterval = null;
+        let handToolTimer = null, isHandToolActive = false;
 
-        let flipTimer = null;
-        let isLongPressing = false;
-        let dragStartX, dragStartY;
-        let isDragging = false;
-        let isSpacePressed = false;
-        let isAutoPlaying = false;
-        let autoPlayInterval = null;
-
-        let handToolTimer = null;
-        let isHandToolActive = false;
-
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                isSpacePressed = true;
-                document.body.classList.add('is-space-pressed');
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') {
-                isSpacePressed = false;
-                document.body.classList.remove('is-space-pressed');
-            }
-        });
+        // 键盘交互
+        window.addEventListener('keydown', (e) => { if (e.code === 'Space') { isSpacePressed = true; document.body.classList.add('is-space-pressed'); }});
+        window.addEventListener('keyup', (e) => { if (e.code === 'Space') { isSpacePressed = false; document.body.classList.remove('is-space-pressed'); }});
 
         function handleMouseDown(e) {
             if (isZoomed) {
-                isDragging = true;
-                dragStartX = e.clientX - posX;
-                dragStartY = e.clientY - posY;
-                handToolTimer = setTimeout(() => {
-                    isHandToolActive = true;
-                    book.classList.add('is-panning');
-                    transformLayer.style.transition = 'none'; 
-                }, 150);
+                isDragging = true; dragStartX = e.clientX - posX; dragStartY = e.clientY - posY;
+                handToolTimer = setTimeout(() => { isHandToolActive = true; book.classList.add('is-panning'); transformLayer.style.transition = 'none'; }, 100);
                 return;
             }
-            if (isSpacePressed) {
-                isDragging = true;
-                dragStartX = e.clientX - posX;
-                dragStartY = e.clientY - posY;
-                transformLayer.style.transition = 'none'; 
-                return;
-            }
-            const x = e.clientX;
-            const isRightSide = x > window.innerWidth / 2;
-            flipTimer = setTimeout(() => {
-                isLongPressing = true;
-                flipTimer = setInterval(() => {
-                    isRightSide ? nextPage() : prevPage();
-                }, 400);
-            }, 500);
+            if (isSpacePressed) { isDragging = true; dragStartX = e.clientX - posX; dragStartY = e.clientY - posY; transformLayer.style.transition = 'none'; return; }
+            const x = e.clientX; const isRight = x > window.innerWidth / 2;
+            flipTimer = setTimeout(() => { isLongPressing = true; flipTimer = setInterval(() => { isRight ? nextPage() : prevPage(); }, 400); }, 500);
         }
 
-        function handleTouchStart(e) {
-            if (e.touches.length === 1) {
-                if (isZoomed) e.preventDefault();
-                handleMouseDown(e.touches[0]);
-            }
-        }
-
-        function handleMouseMove(e) {
-            if (isDragging && (isHandToolActive || isSpacePressed)) {
-                posX = e.clientX - dragStartX;
-                posY = e.clientY - dragStartY;
-                applyTransform();
-            }
-        }
-
-        function handleTouchMove(e) {
-            if (e.touches.length === 1) {
-                if (isZoomed) e.preventDefault();
-                handleMouseMove(e.touches[0]);
-            }
-        }
-
+        function handleTouchStart(e) { if (e.touches.length === 1) { if (isZoomed) e.preventDefault(); handleMouseDown(e.touches[0]); } }
+        function handleMouseMove(e) { if (isDragging && (isHandToolActive || isSpacePressed)) { posX = e.clientX - dragStartX; posY = e.clientY - dragStartY; applyTransform(); } }
+        function handleTouchMove(e) { if (e.touches.length === 1) { if (isZoomed) e.preventDefault(); handleMouseMove(e.touches[0]); } }
         function handleMouseUp() {
-            isDragging = false;
-            clearTimeout(handToolTimer);
-            clearTimeout(flipTimer);
-            clearInterval(flipTimer);
+            isDragging = false; clearTimeout(handToolTimer); clearTimeout(flipTimer); clearInterval(flipTimer);
             transformLayer.style.transition = 'transform 0.6s cubic-bezier(0.2, 0, 0.2, 1)';
             book.classList.remove('is-panning');
-            setTimeout(() => { 
-                isLongPressing = false; 
-                isHandToolActive = false;
-            }, 50);
+            setTimeout(() => { isLongPressing = false; isHandToolActive = false; }, 50);
         }
 
-        function handleBookClick(e) {
-            if (isLongPressing || isHandToolActive || isSpacePressed) return;
-            toggleZoom(e);
-        }
+        function handleBookClick(e) { if (isLongPressing || isHandToolActive || isSpacePressed) return; toggleZoom(e); }
 
         function toggleZoom(e) { 
             isZoomed = !isZoomed; 
             if (isZoomed && e) {
                 const rect = viewport.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                posX = (centerX - e.clientX) * 1.5;
-                posY = (centerY - e.clientY) * 1.5;
-            } else {
-                posX = 0; posY = 0;
-            }
+                const cX = rect.left + rect.width / 2, cY = rect.top + rect.height / 2;
+                posX = (cX - e.clientX) * 1.5; posY = (cY - e.clientY) * 1.5;
+            } else { posX = 0; posY = 0; }
             book.classList.toggle('is-zoomed', isZoomed);
             document.getElementById('zoom-toggle-btn').classList.toggle('active', isZoomed);
             fitToScreen(); 
         }
 
         function toggleAutoPlay() {
-            isAutoPlaying = !isAutoPlaying;
-            const btn = document.getElementById('autoplay-btn');
-            btn.classList.toggle('active', isAutoPlaying);
+            isAutoPlaying = !isAutoPlaying; document.getElementById('autoplay-btn').classList.toggle('active', isAutoPlaying);
             if (isAutoPlaying) {
-                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-                showToast("自动翻转模式已开启");
-                autoPlayInterval = setInterval(() => {
-                    if (isSingleMode) {
-                        if (currentPage >= totalPageCount) jumpToLeaf(0);
-                        else nextPage();
-                    } else {
-                        if (currentLeaf >= totalPageCount / 2) jumpToLeaf(0);
-                        else nextPage();
-                    }
+                autoPlayInterval = setInterval(() => { 
+                    if (isSingleMode) { if (currentPage >= totalPageCount) jumpToLeaf(0); else nextPage(); }
+                    else { if (currentLeaf >= totalPageCount / 2) jumpToLeaf(0); else nextPage(); }
                 }, 3000);
-            } else {
-                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-                clearInterval(autoPlayInterval);
-                showToast("自动翻转模式已关闭");
-            }
+            } else clearInterval(autoPlayInterval);
         }
 
-        function rotateBook() {
-            rotation = (rotation + 90) % 360;
-            applyTransform();
-            showToast(`视图已翻转 ${rotation}°`);
-        }
+        function rotateBook() { rotation = (rotation + 90) % 360; applyTransform(); }
 
-        function init() {
-            // 设置标题
-            const currentUrl = window.location.href;
-            document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`;
-            document.getElementById('total-page-display').innerText = `/ ${totalPageCount}`;
-            
-            // 执行初始渲染和坐标计算
+        // 初始化入口
+        async function init() {
             renderBook();
-            updateView(); // 内部会调用 fitToScreen() 并应用 transform
+            updateView(); // 此时 is-booting 为 body 启用，transition 均为 none
 
-            // 彻底渲染锁定机制：利用双帧请求确保 GPU 已准备好初始状态
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    // 同步应用初始计算
-                    book.offsetHeight; 
-                    
-                    // 显示视图，移除遮罩
-                    viewport.style.visibility = 'visible';
-                    viewport.style.opacity = '1';
-                    pageLoader.style.opacity = '0';
-                    setTimeout(() => {
-                        pageLoader.style.display = 'none';
-                        viewport.style.pointerEvents = 'auto';
-                        lazyLoad(); // 进入视野后再加载第一批图片
-                    }, 500);
-                });
-            });
+            // 预解码首张图片以防止首屏白屏闪烁
+            const firstImg = new Image();
+            firstImg.src = imageList[0];
+            await new Promise(r => { if (firstImg.complete) r(); else { firstImg.onload = r; firstImg.onerror = r; }});
+
+            // 强制等待一个宏任务周期，确保浏览器已经捕捉到初始位置
+            setTimeout(() => {
+                document.body.classList.remove('is-booting');
+                viewport.style.opacity = '1';
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; lazyLoad(); }, 500);
+            }, 50);
+
+            document.getElementById('total-page-display').innerText = `/ ${totalPageCount}`;
         }
 
         function renderBook() {
             book.innerHTML = '';
-            const totalLeaves = totalPageCount / 2;
-            for(let i = 0; i < totalLeaves; i++) {
+            for(let i = 0; i < totalPageCount / 2; i++) {
                 const leaf = document.createElement('div');
-                leaf.className = 'page';
-                leaf.id = `leaf-${i}`;
-                leaf.style.zIndex = totalLeaves - i;
+                leaf.className = 'page'; leaf.id = `leaf-${i}`; leaf.style.zIndex = (totalPageCount / 2) - i;
                 leaf.innerHTML = `
-                    <div class="page-content front"><div class="loading-shimmer"></div><img data-src="${imageList[i*2]}" onload="this.classList.add('loaded')"></div>
-                    <div class="page-content back"><div class="loading-shimmer"></div><img data-src="${imageList[i*2+1]}" onload="this.classList.add('loaded')"></div>
+                    <div class="page-content front"><img data-src="${imageList[i*2]}" onload="this.classList.add('loaded')"></div>
+                    <div class="page-content back"><img data-src="${imageList[i*2+1]}" onload="this.classList.add('loaded')"></div>
                 `;
                 book.appendChild(leaf);
                 const thumb = document.createElement('div');
@@ -556,136 +370,91 @@
             }
         }
 
-        function jumpToLeaf(i) {
-            if(isSingleMode) currentPage = i * 2 + 1; else currentLeaf = i;
-            updateView();
-        }
+        function jumpToLeaf(i) { if(isSingleMode) currentPage = i * 2 + 1; else currentLeaf = i; updateView(); }
 
         function updateView() {
             const pages = document.querySelectorAll('.page');
-            const pageWidth = 1000;
+            const pW = 1000;
+
             if (isSingleMode) {
                 book.classList.add('single-mode');
                 book.style.transform = `translateX(0)`;
-                pages.forEach((page, i) => {
-                    const targetLeaf = Math.floor((currentPage - 1) / 2);
+                pages.forEach((p, i) => {
+                    const isTarget = i === Math.floor((currentPage - 1) / 2);
                     const isBack = (currentPage - 1) % 2 === 1;
-                    if (i === targetLeaf) {
-                        page.classList.add('active-single');
-                        const front = page.querySelector('.front'), back = page.querySelector('.back');
-                        front.style.display = isBack ? 'none' : 'block';
-                        back.style.display = isBack ? 'block' : 'none';
-                        if(isBack) back.style.transform = 'rotateY(0)';
-                    } else page.classList.remove('active-single');
+                    if (isTarget) {
+                        p.classList.add('active-single');
+                        const f = p.querySelector('.front'), b = p.querySelector('.back');
+                        f.style.display = isBack ? 'none' : 'block';
+                        b.style.display = isBack ? 'block' : 'none';
+                        if(isBack) b.style.transform = 'rotateY(0)';
+                    } else p.classList.remove('active-single');
                 });
                 document.getElementById('page-jump').value = currentPage;
             } else {
                 book.classList.remove('single-mode');
-                let shiftX = (currentLeaf === 0) ? -pageWidth/2 : (currentLeaf === totalPageCount/2 ? pageWidth/2 : 0);
+                // 核心：封面（第0张纸）居中，封底（最后一张纸全翻完）居中，其余中轴对齐
+                let shiftX = (currentLeaf === 0) ? -pW/2 : (currentLeaf === totalPageCount/2 ? pW/2 : 0);
                 book.style.transform = `translateX(${shiftX}px)`;
-                pages.forEach((page, i) => {
-                    const front = page.querySelector('.front'), back = page.querySelector('.back');
-                    front.style.display = 'block'; back.style.display = 'block';
-                    back.style.transform = 'rotateY(180deg)';
-                    if (i < currentLeaf) { page.classList.add('flipped'); page.style.zIndex = i; }
-                    else { page.classList.remove('flipped'); page.style.zIndex = (totalPageCount/2) - i; }
-                    page.classList.remove('active-single');
+                
+                pages.forEach((p, i) => {
+                    // 修复“左侧内容丢失”：必须重置所有页面的 display 和 transform
+                    const f = p.querySelector('.front'), b = p.querySelector('.back');
+                    f.style.display = 'block';
+                    b.style.display = 'block';
+                    b.style.transform = 'rotateY(180deg)'; // 恢复背面的 180 度翻转
+
+                    if (i < currentLeaf) {
+                        p.classList.add('flipped');
+                        p.style.zIndex = i;
+                    } else {
+                        p.classList.remove('flipped');
+                        p.style.zIndex = (totalPageCount / 2) - i;
+                    }
                 });
-                const displayNum = currentLeaf === 0 ? 1 : (currentLeaf === totalPageCount/2 ? totalPageCount : currentLeaf * 2);
-                document.getElementById('page-jump').value = displayNum;
+                const dNum = currentLeaf === 0 ? 1 : (currentLeaf === totalPageCount/2 ? totalPageCount : currentLeaf * 2);
+                document.getElementById('page-jump').value = dNum;
             }
             document.getElementById('prev-btn').disabled = isSingleMode ? currentPage <= 1 : currentLeaf === 0;
             document.getElementById('next-btn').disabled = isSingleMode ? currentPage >= totalPageCount : currentLeaf === totalPageCount / 2;
-            
-            fitToScreen();
-            lazyLoad();
+            fitToScreen(); lazyLoad();
         }
-
-        function nextPage() {
-            if (isSingleMode) { if (currentPage < totalPageCount) { currentPage++; playFlip(); updateView(); } }
-            else { if (currentLeaf < totalPageCount / 2) { currentLeaf++; playFlip(); updateView(); } }
-        }
-
-        function prevPage() {
-            if (isSingleMode) { if (currentPage > 1) { currentPage--; playFlip(); updateView(); } }
-            else { if (currentLeaf > 0) { currentLeaf--; playFlip(); updateView(); } }
-        }
-
-        function playFlip() { flipAudio.currentTime = 0; flipAudio.play().catch(()=>{}); }
 
         function fitToScreen() {
-            const isLandscape = window.innerWidth > window.innerHeight;
-            const horizontalPadding = isLandscape ? 0 : 40;
-            const verticalPadding = isLandscape ? 80 : 160;
-            const vpW = window.innerWidth - horizontalPadding;
-            const vpH = window.innerHeight - verticalPadding;
-            
-            let targetW = (isSingleMode || currentLeaf === 0 || currentLeaf === totalPageCount/2) ? 1000 : 2000;
-            
-            // 基础缩放逻辑
-            baseScale = Math.min(vpW / targetW, vpH / 1414);
-            
-            // 图片预览尺寸保护：预览模式下倍数限制在1.1倍以内，防止初始化闪烁和性能下降
-            if (!isZoomed && baseScale > 1.1) baseScale = 1.1;
-
+            const isL = window.innerWidth > window.innerHeight;
+            const hP = isL ? 0 : 30, vP = isL ? 80 : 160;
+            const vpW = window.innerWidth - hP, vpH = window.innerHeight - vP;
+            let tW = (isSingleMode || currentLeaf === 0 || currentLeaf === totalPageCount/2) ? 1000 : 2000;
+            baseScale = Math.min(vpW / tW, vpH / 1414);
             scale = isZoomed ? baseScale * 2.2 : baseScale;
             applyTransform();
         }
 
+        function applyTransform() { transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`; }
+
         function lazyLoad() {
             const activeIdx = isSingleMode ? Math.floor((currentPage-1)/2) : currentLeaf;
-            const range = [activeIdx - 1, activeIdx, activeIdx + 1];
-            range.forEach(idx => {
+            [activeIdx - 1, activeIdx, activeIdx + 1].forEach(idx => {
                 if(idx < 0 || idx >= totalPageCount/2) return;
                 const leaf = document.getElementById(`leaf-${idx}`);
-                if(!leaf) return;
-                const imgs = leaf.querySelectorAll('img[data-src]');
-                imgs.forEach(img => { img.src = img.getAttribute('data-src'); img.removeAttribute('data-src'); });
+                if(leaf) leaf.querySelectorAll('img[data-src]').forEach(img => { img.src = img.getAttribute('data-src'); img.removeAttribute('data-src'); });
             });
         }
 
-        function handleJump(val) {
-            let n = parseInt(val); if(isNaN(n)) return;
-            n = Math.max(1, Math.min(totalPageCount, n));
-            if(isSingleMode) currentPage = n; else currentLeaf = Math.floor((n-1) / 2);
-            updateView();
-        }
-
-        function toggleMode() {
-            isSingleMode = !isSingleMode;
-            document.getElementById('mode-toggle').classList.toggle('active', isSingleMode);
-            if(isSingleMode) currentPage = currentLeaf === 0 ? 1 : currentLeaf * 2;
-            else currentLeaf = Math.floor((currentPage - 1) / 2);
-            showToast(isSingleMode ? "已切换至单页模式" : "已切换至双页模式");
-            updateView();
-        }
-
-        function copyShareLink() {
-            const dummy = document.createElement('input'); document.body.appendChild(dummy);
-            dummy.value = window.location.href; dummy.select();
-            document.execCommand('copy'); document.body.removeChild(dummy);
-            showToast("链接已复制");
-        }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 1500);
-        }
-
+        function nextPage() { if (isSingleMode) { if (currentPage < totalPageCount) { currentPage++; playFlip(); updateView(); } } else { if (currentLeaf < totalPageCount / 2) { currentLeaf++; playFlip(); updateView(); } } }
+        function prevPage() { if (isSingleMode) { if (currentPage > 1) { currentPage--; playFlip(); updateView(); } } else { if (currentLeaf > 0) { currentLeaf--; playFlip(); updateView(); } } }
+        function playFlip() { flipAudio.currentTime = 0; flipAudio.play().catch(()=>{}); }
+        function handleJump(v) { let n = parseInt(v); if(isNaN(n)) return; n = Math.max(1, Math.min(totalPageCount, n)); if(isSingleMode) currentPage = n; else currentLeaf = Math.floor((n-1)/2); updateView(); }
+        function toggleMode() { isSingleMode = !isSingleMode; document.getElementById('mode-toggle').classList.toggle('active', isSingleMode); if(isSingleMode) currentPage = currentLeaf === 0 ? 1 : currentLeaf * 2; else currentLeaf = Math.floor((currentPage-1)/2); updateView(); }
+        function copyShareLink() { const d = document.createElement('input'); document.body.appendChild(d); d.value = window.location.href; d.select(); document.execCommand('copy'); document.body.removeChild(d); showToast("链接已复制"); }
+        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 1500); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
         function toggleMobileQR() { if(window.innerWidth <= 768) document.getElementById('qr-container').classList.toggle('mobile-show'); }
-        function applyTransform() { transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`; }
 
         window.onload = init;
         window.onresize = fitToScreen;
-        window.addEventListener("orientationchange", () => { setTimeout(fitToScreen, 250); });
-        
-        document.onkeydown = (e) => { 
-            if(e.code === 'Space') e.preventDefault();
-            if(e.key === "ArrowRight") nextPage(); 
-            if(e.key === "ArrowLeft") prevPage(); 
-        };
+        window.addEventListener("orientationchange", () => { setTimeout(fitToScreen, 300); });
+        document.onkeydown = (e) => { if(e.code === 'Space') e.preventDefault(); if(e.key === "ArrowRight") nextPage(); if(e.key === "ArrowLeft") prevPage(); };
     </script>
 </body>
 </html>
