@@ -581,13 +581,13 @@
                 if(!leaf) return;
                 const imgs = leaf.querySelectorAll('img[data-src]');
                 imgs.forEach(img => {
-                    img.src = img.getAttribute('data-src');img。src = img.getAttribute('data-src')；
-                    img.removeAttribute('data-src');img.removeAttribute(“data-src”);
+                    img.src = img.getAttribute('data-src');
+                    img.removeAttribute('data-src');
                 });
             });
         }
 
-        function handleJump(val) {   函数handleJump(val   瓦尔) {
+        function handleJump(val) {
             let n = parseInt(val); if(isNaN(n)) return;
             n = Math.max(1, Math.min(totalPageCount, n));
             if(isSingleMode) currentPage = n; else currentLeaf = Math.floor((n-1) / 2);
@@ -610,7 +610,7 @@
             showToast("链接已复制");
         }
 
-        function showToast(msg) {   showToast(msg   味精) {
+        function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 1500);
@@ -624,7 +624,7 @@
         }
 
         window.onload = init;
-        window.onresize = fitToScreen;窗口。onresize =植屏;
+        window.onresize = fitToScreen;
         window.addEventListener("orientationchange", () => { setTimeout(fitToScreen, 200); });
         
         document.onkeydown = (e) => { 
@@ -632,6 +632,6 @@
             if(e.key === "ArrowRight") nextPage(); 
             if(e.key === "ArrowLeft") prevPage(); 
         };
-    </script>   < / script>
-</body>   < / body>
-</html>   < / html>
+    </script>
+</body>
+</html>
