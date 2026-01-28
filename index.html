@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>未来方洲 2025 幸福年报 - 高清全屏版</title>
+    <title>未来方洲 2025 幸福年报 - 增强高清版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --book-width: 450px;
-            --book-height: 636px;
+            /* 高清建模分辨率 */
+            --book-width: 1000px; 
+            --book-height: 1414px;
             --bg-color: #0d0e12;
             --panel-color: rgba(26, 28, 34, 0.98);
             --accent-color: #fbbf24;
-            /* 极淡的阴影强度，不再遮挡内容 */
-            --shadow-intensity: rgba(0, 0, 0, 0.1);
+            --shadow-intensity: rgba(0, 0, 0, 0.12);
         }
 
         body {
@@ -24,13 +24,13 @@
             flex-direction: column;
             height: 100vh;
             color: #e5e7eb;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* 侧边栏目录 */
         #sidebar {
             position: fixed;
-            left: -300px;
+            left: -320px;
             top: 0;
             bottom: 0;
             width: 300px;
@@ -53,14 +53,13 @@
         .thumbnail-item:hover { background: rgba(255,255,255,0.05); }
         .thumbnail-item.active { border-left: 4px solid var(--accent-color); background: rgba(251, 191, 36, 0.1); }
 
-        /* 视口容器 */
         #viewport {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            perspective: 3000px;
-            overflow: hidden;
+            perspective: 4000px;
+            overflow: hidden;   溢出:隐藏;
             position: relative;
             touch-action: none;
         }
@@ -71,6 +70,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transform-style: preserve-3d;
         }
 
         .book {
@@ -91,6 +91,7 @@
             transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
             transform-style: preserve-3d;
             cursor: pointer;
+            backface-visibility: hidden;
         }
 
         .page-content {
@@ -102,20 +103,20 @@
             overflow: hidden;
             image-rendering: -webkit-optimize-contrast;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.02);
+            transform: translateZ(0); 
         }
 
         .page-content img { 
             width: 100%; 
             height: 100%; 
-            object-fit: cover; 
+            object-fit: contain; 
             -webkit-user-drag: none;
         }
 
-        /* 调淡的中缝阴影 */
         .page-content::after {
             content: '';
             position: absolute;
-            top: 0; width: 60px; height: 100%; z-index: 10;
+            top: 0; width: 80px; height: 100%; z-index: 10;
             pointer-events: none;
         }
         .front::after { left: 0; background: linear-gradient(to right, var(--shadow-intensity) 0%, rgba(0,0,0,0) 100%); }
@@ -124,18 +125,17 @@
         .back { transform: rotateY(180deg); }
         .page.flipped { transform: rotateY(-180deg); }
 
-        /* 底部浮动手柄 */
         .floating-controls {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--panel-color);
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: 60px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 10px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
             z-index: 500;
@@ -150,51 +150,93 @@
             color: #9ca3af;
         }
         .icon-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: var(--accent-color); }
-        .icon-btn.active { color: var(--accent-color); }
+        .icon-btn.active { color: var(--accent-color); background: rgba(251, 191, 36, 0.1); }
         .icon-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
-        .page-input {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid #3f3f46;
-            color: #fff;
+        /* 二维码容器 */
+        .qr-wrapper {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            z-index: 600;
+        }
+
+        .qr-btn {
             width: 50px;
-            text-align: center;
-            font-size: 15px;
-            border-radius: 8px;
-            padding: 4px 0;
-            font-family: monospace;
+            height: 50px;
+            background: var(--panel-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        .qr-popover {
+            position: absolute;
+            bottom: 65px;
+            right: 0;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 160px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .qr-wrapper:hover .qr-popover { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         #overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             display: none;
             z-index: 900;
         }
 
-        /* 响应式微调 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            z-index: 2000;
+            display: none;
+        }
+
         @media (max-width: 640px) {
             .hide-mobile { display: none; }
-            .floating-controls { width: 92%; justify-content: space-around; padding: 8px 12px; bottom: 20px; }
-            .page-input { width: 40px; font-size: 13px; }
+            .floating-controls { width: 94%; justify-content: space-around; padding: 6px 8px; bottom: 20px; }
+            .qr-wrapper { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 侧边栏索引 -->
     <div id="sidebar">
         <div class="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
             <span class="font-bold tracking-widest text-sm text-gray-200">目录索引 / INDEX</span>
             <button onclick="toggleSidebar()" class="text-gray-500 hover:text-white transition-colors">✕</button>
         </div>
-        <div id="thumbnail-list" class="flex-1 overflow-y-auto p-4 custom-scrollbar">
-            <!-- JS 生成 -->
-        </div>
+        <div id="thumbnail-list" class="flex-1 overflow-y-auto p-4 custom-scrollbar"></div>
     </div>
 
-    <!-- 顶部状态栏 -->
+    <div id="toast" class="toast">链接已复制</div>
+
     <header class="p-4 flex justify-between items-center bg-black/40 backdrop-blur-md z-50 border-b border-white/5">
         <div class="flex items-center gap-5">
             <button onclick="toggleSidebar()" class="icon-btn" title="查看目录">
@@ -202,12 +244,17 @@
             </button>
             <div>
                 <h1 class="text-sm font-bold tracking-wider">未来方洲 2025 幸福年报</h1>
-                <p class="text-[9px] text-gray-500 uppercase tracking-[0.2em] hide-mobile">Annual Digital Report</p>
+                <p class="text-[9px] text-gray-500 uppercase tracking-[0.2em] hide-mobile">Ultra HD Digital Presentation</p>
             </div>
         </div>
-        <button onclick="toggleFullscreen()" class="icon-btn hide-mobile" title="全屏">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
-        </button>
+        <div class="flex items-center gap-2">
+            <button onclick="shareLink()" class="icon-btn" title="分享">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+            </button>
+            <button onclick="toggleFullscreen()" class="icon-btn hide-mobile" title="全屏">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
+            </button>
+        </div>
     </header>
 
     <div id="viewport">
@@ -217,14 +264,24 @@
         </div>
     </div>
 
-    <!-- 底部导航中心 -->
+    <!-- 二维码 -->
+    <div class="qr-wrapper">
+        <div class="qr-popover">
+            <div class="text-[12px] text-black font-bold mb-2">扫一扫 手机阅读</div>
+            <img id="qr-img" src="" class="w-28 h-28" alt="QR Code">
+        </div>
+        <div class="qr-btn">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+        </div>
+    </div>
+
     <div class="floating-controls">
         <button class="icon-btn" id="prev-btn" onclick="prevPage()">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></svg>
         </button>
 
-        <div class="flex items-center gap-3">
-            <input type="text" id="page-jump-input" class="page-input" value="1" onchange="handleJump(this.value)">
+        <div class="flex items-center bg-white/5 rounded-xl px-2">
+            <input type="text" id="page-jump-input" class="bg-transparent border-none text-white w-10 text-center text-sm font-mono focus:ring-0" value="1" onchange="handleJump(this.value)">
             <span class="text-xs text-gray-500 font-mono">/ 20</span>
         </div>
 
@@ -234,13 +291,21 @@
 
         <div class="w-px h-6 bg-white/10 mx-1 hide-mobile"></div>
 
-        <button class="icon-btn" onclick="adjustZoom(0.4)" title="放大/还原">
+        <button class="icon-btn" id="page-mode-btn" onclick="togglePageMode()" title="切换单/双页">
+            <svg id="mode-icon-double" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <svg id="mode-icon-single" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2z"></path></svg>
+        </button>
+
+        <button class="icon-btn" onclick="toggleRotation()" title="旋转视图">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        </button>
+
+        <button class="icon-btn" onclick="adjustZoom()" title="缩放查看">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
         </button>
     </div>
 
     <script>
-        // 图片资源定义
         const images = [
             "年刊分页-01.jpg", "年刊分页-02.jpg", "年刊分页-03.jpg", "年刊分页-04.jpg",
             "年刊分页-05.jpg", "年刊分页-06.jpg", "年刊分页-07.jpg", "年刊分页-08.jpg",
@@ -249,9 +314,8 @@
             "年刊分页-17.jpg", "年刊分页-18.jpg", "年刊分页-19.jpg", "年刊分页-20.jpg"
         ];
 
-        // 核心音频：纸张翻动声
         const flipAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-        flipAudio.volume = 0.6;
+        flipAudio.volume = 0.5;
 
         const book = document.getElementById('book');
         const transformLayer = document.getElementById('transform-layer');
@@ -263,14 +327,19 @@
         let scale = 1;
         let baseScale = 1;
         let posX = 0, posY = 0;
+        let rotation = 0;
         let isDragging = false, dragStartX, dragStartY;
+        let isDoublePageMode = true;
+
+        let longPressTimer = null, longPressInterval = null, isLongPressed = false;
 
         function init() {
+            const currentUrl = window.location.href;
+            document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
+
             book.innerHTML = '';
             thumbList.innerHTML = '';
-            
             for(let i = 0; i < totalLeaves; i++) {
-                // 构建物理书页
                 const leaf = document.createElement('div');
                 leaf.className = 'page';
                 leaf.style.zIndex = totalLeaves - i;
@@ -279,72 +348,77 @@
                     <div class="page-content back"><img src="${images[i*2+1]}" onerror="onImgErr(this, ${i*2+2})"></div>
                 `;
                 
+                const startPress = (e) => {
+                    if(scale > baseScale * 1.2) return;
+                    const x = e.clientX || (e.touches && e.touches[0].clientX);
+                    const rect = viewport.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const dir = x > centerX ? 'next' : 'prev';
+                    isLongPressed = false;
+                    clearTimeout(longPressTimer); clearInterval(longPressInterval);
+                    longPressTimer = setTimeout(() => {
+                        isLongPressed = true;
+                        longPressInterval = setInterval(() => { dir === 'next' ? nextPage() : prevPage(); }, 500);
+                        dir === 'next' ? nextPage() : prevPage();
+                    }, 500);
+                };
+                const endPress = () => { clearTimeout(longPressTimer); clearInterval(longPressInterval); };
+
+                leaf.addEventListener('mousedown', startPress);
+                leaf.addEventListener('touchstart', startPress);
+                window.addEventListener('mouseup', endPress);
+                window.addEventListener('touchend', endPress);
+
                 leaf.onclick = () => {
-                    if(scale > baseScale + 0.1) return;
+                    if(isLongPressed || scale > baseScale * 1.2) return;
                     leaf.classList.contains('flipped') ? (i === currentLeaf - 1 && prevPage()) : (i === currentLeaf && nextPage());
                 };
                 book.appendChild(leaf);
 
-                // 构建缩略图
                 const thumb = document.createElement('div');
                 thumb.className = `thumbnail-item flex gap-4 items-center rounded-lg mb-2`;
                 thumb.onclick = () => { jumpToLeaf(i); toggleSidebar(); };
                 thumb.innerHTML = `
-                    <div class="w-16 h-20 bg-zinc-800 shrink-0 overflow-hidden shadow-xl rounded-md border border-white/5">
+                    <div class="w-16 h-20 bg-zinc-800 shrink-0 overflow-hidden shadow-xl rounded-md">
                         <img src="${images[i*2]}" class="w-full h-full object-cover">
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-xs font-bold text-white">PAGE ${i*2+1}-${i*2+2}</span>
-                        <span class="text-[10px] text-gray-500">双页预览</span>
+                        <span class="text-xs font-bold text-white uppercase font-mono">P${i*2+1}-${i*2+2}</span>
+                        <span class="text-[10px] text-gray-500">HD VIEW</span>
                     </div>
                 `;
                 thumbList.appendChild(thumb);
             }
-            
             setTimeout(fitToScreen, 150);
             updateView();
         }
 
         function onImgErr(img, n) {
             img.onerror = null;
-            img.src = `https://picsum.photos/seed/ark${n}/900/1200?text=Page+${n}`;
+            img.src = `https://placehold.jp/24/333333/ffffff/1000x1414.png?text=PAGE+${n}`;
         }
 
-        /**
-         * 核心：全屏自适应满屏尺寸
-         * 增加了手机端封面/封底单页满屏逻辑
-         */
         function fitToScreen() {
-            const viewportW = window.innerWidth - 20; 
-            const viewportH = window.innerHeight - 150; 
+            const vpW = window.innerWidth - 20; 
+            const vpH = window.innerHeight - 160; 
             
-            const isMobile = window.innerWidth < 768;
-            // 判断是否应该以单页为目标进行满屏适配（仅移动端且处于封面或封底时）
-            const isSingleFocus = isMobile && (currentLeaf === 0 || currentLeaf === totalLeaves);
+            // 封面和封底，或者是明确的单页模式，均使用单页目标宽度进行满屏适配
+            const isSingle = !isDoublePageMode || (currentLeaf === 0 || currentLeaf === totalLeaves);
             
-            const targetW = isSingleFocus ? 450 : 900; 
-            const targetH = 636; 
+            const targetW = isSingle ? 1000 : 2000; 
+            const targetH = 1414; 
             
-            baseScale = Math.min(viewportW / targetW, viewportH / targetH);
+            baseScale = Math.min(vpW / targetW, vpH / targetH);
             scale = baseScale;
-            posX = 0; 
-            posY = 0;
+            posX = 0; posY = 0;
             applyTransform();
-        }
-
-        function playFlipEffect() {
-            flipAudio.currentTime = 0;
-            flipAudio.play().catch(() => {});
         }
 
         function nextPage() {
             if (currentLeaf < totalLeaves) {
                 playFlipEffect();
                 document.querySelectorAll('.page')[currentLeaf].classList.add('flipped');
-                currentLeaf++;
-                updateView();
-                // 翻页后重新计算比例，实现单页到双页的丝滑切换
-                fitToScreen();
+                currentLeaf++; updateView(); fitToScreen();
             }
         }
 
@@ -353,96 +427,116 @@
                 playFlipEffect();
                 currentLeaf--;
                 document.querySelectorAll('.page')[currentLeaf].classList.remove('flipped');
-                updateView();
-                // 翻页后重新计算比例
-                fitToScreen();
+                updateView(); fitToScreen();
             }
         }
 
         function jumpToLeaf(idx) {
             const pages = document.querySelectorAll('.page');
             currentLeaf = idx;
-            pages.forEach((p, i) => {
-                i < idx ? p.classList.add('flipped') : p.classList.remove('flipped');
-            });
-            updateView();
-            fitToScreen();
+            pages.forEach((p, i) => { i < idx ? p.classList.add('flipped') : p.classList.remove('flipped'); });
+            updateView(); fitToScreen();
         }
 
         function handleJump(val) {
-            let n = parseInt(val);
-            if (isNaN(n) || n < 1) n = 1;
-            if (n > 20) n = 20;
+            let n = parseInt(val); if(isNaN(n) || n < 1) n = 1; if(n > 20) n = 20;
             jumpToLeaf(Math.floor((n-1)/2));
         }
 
         function updateView() {
-            const displayPage = currentLeaf === 0 ? 1 : (currentLeaf === totalLeaves ? 20 : currentLeaf * 2);
-            pageJumpInput.value = displayPage;
-
+            const p = currentLeaf === 0 ? 1 : (currentLeaf === totalLeaves ? 20 : currentLeaf * 2);
+            pageJumpInput.value = p;
             const thumbs = document.querySelectorAll('.thumbnail-item');
             thumbs.forEach((t, i) => i === currentLeaf ? t.classList.add('active') : t.classList.remove('active'));
-
-            // 封面和封底居中算法
+            
             let shiftX = 0;
-            if (currentLeaf === 0) shiftX = -225; 
-            else if (currentLeaf === totalLeaves) shiftX = 225; 
+            const isSingle = !isDoublePageMode || (currentLeaf === 0 || currentLeaf === totalLeaves);
+            if (isSingle) {
+                if (currentLeaf === 0) shiftX = -500;
+                else if (currentLeaf === totalLeaves) shiftX = 500;
+                else shiftX = -500; 
+            }
             book.style.transform = `translateX(${shiftX}px)`;
-
+            
             const pages = document.querySelectorAll('.page');
             pages.forEach((p, i) => p.style.zIndex = i < currentLeaf ? i : totalLeaves - i);
-
             document.getElementById('prev-btn').disabled = currentLeaf === 0;
             document.getElementById('next-btn').disabled = currentLeaf === totalLeaves;
         }
 
+        function togglePageMode() {
+            isDoublePageMode = !isDoublePageMode;
+            document.getElementById('mode-icon-double').classList.toggle('hidden', !isDoublePageMode);
+            document.getElementById('mode-icon-single').classList.toggle('hidden', isDoublePageMode);
+            fitToScreen();
+            updateView();
+        }
+
+        function toggleRotation() {
+            rotation = (rotation + 90) % 360;
+            applyTransform();
+        }
+
+        function shareLink() {
+            const url = window.location.href;
+            const temp = document.createElement('input');
+            document.body.appendChild(temp);
+            temp.value = url;
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
         function toggleSidebar() {
-            const sb = document.getElementById('sidebar');
-            const ov = document.getElementById('overlay');
-            const isOpen = sb.classList.toggle('open');
-            ov.style.display = isOpen ? 'block' : 'none';
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
         }
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else if (document.exitFullscreen) document.exitFullscreen();
+            else document.exitFullscreen();
         }
 
-        function adjustZoom(step) {
-            if (scale > baseScale * 1.5) {
-                scale = baseScale; posX = 0; posY = 0;
-            } else {
-                scale = baseScale * 2.2; 
-            }
+        function adjustZoom() {
+            if (scale > baseScale * 1.5) { scale = baseScale; posX = 0; posY = 0; }
+            else { scale = baseScale * 2.5; }
             applyTransform();
         }
 
         function applyTransform() {
-            transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+            transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
         }
 
-        const vp = document.getElementById('viewport');
+        function playFlipEffect() { flipAudio.currentTime = 0; flipAudio.play().catch(() => {}); }
+
+        const viewport = document.getElementById('viewport');
         const startMove = (x, y) => { 
-            if(scale <= baseScale + 0.1) return; 
+            if(scale <= baseScale + 0.05) return; 
             isDragging = true; dragStartX = x - posX; dragStartY = y - posY; 
             transformLayer.style.transition = 'none'; 
         };
         const handleMove = (x, y) => { if(!isDragging) return; posX = x - dragStartX; posY = y - dragStartY; applyTransform(); };
-        const endMove = () => { isDragging = false; transformLayer.style.transition = 'transform 0.4s cubic-bezier(0.2, 0, 0.2, 1)'; };
-
-        vp.onmousedown = e => startMove(e.clientX, e.clientY);
-        window.onmousemove = e => handleMove(e.clientX, e.clientY);
-        window.onmouseup = endMove;
+        const endMove = () => { isDragging = false; transformLayer.style.transition = 'transform 0.4s ease'; };
         
-        vp.ontouchstart = e => startMove(e.touches[0].clientX, e.touches[0].clientY);
-        vp.ontouchmove = e => { if(isDragging) e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); };
-        vp.ontouchend = endMove;
+        viewport.addEventListener('mousedown', e => startMove(e.clientX, e.clientY));
+        window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
+        window.addEventListener('mouseup', endMove);
+        viewport.addEventListener('touchstart', e => startMove(e.touches[0].clientX, e.touches[0].clientY));
+        viewport.addEventListener('touchmove', e => { if(isDragging) e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); });
+        viewport.addEventListener('touchend', endMove);
 
-        vp.onwheel = e => { e.preventDefault(); scale = Math.min(Math.max(scale + (e.deltaY > 0 ? -0.1 : 0.1), baseScale * 0.5), baseScale * 5); applyTransform(); };
+        viewport.onwheel = e => { 
+            e.preventDefault(); 
+            scale = Math.min(Math.max(scale + (e.deltaY > 0 ? -0.1 : 0.1), baseScale * 0.5), baseScale * 6); 
+            applyTransform(); 
+        };
 
         window.onload = init;
         window.onresize = fitToScreen;
-        
         document.addEventListener('keydown', e => {
             if(e.key === 'ArrowRight') nextPage();
             if(e.key === 'ArrowLeft') prevPage();
