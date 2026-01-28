@@ -9,7 +9,7 @@
     <meta name="description" content="点击开启 2025 幸福篇章，见证未来方洲的年度印记。">
     <meta property="og:title" content="未来方洲 2025 幸福年报">
     <meta property="og:description" content="点击开启 2025 幸福篇章，见证未来方洲的年度印记。">
-    <meta property="og:image" content="年刊分页-01.jpg"> 
+    <meta property="og:image" content="https://raw.githubusercontent.com/2352899314-cell/weilaifangzhou/main/年刊分页-01.jpg"> 
     <meta property="og:type" content="website">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -69,7 +69,13 @@
             overflow: hidden;
             position: relative;
             touch-action: none;
+            /* 基础指针样式 */
+            cursor: grab;
         }
+
+        /* 动态缩放指针样式 */
+        .zoom-in-mode .page { cursor: zoom-in !important; }
+        .zoom-out-mode .page { cursor: zoom-out !important; }
 
         .book-transform-layer {
             transition: transform 0.5s cubic-bezier(0.2, 0, 0.2, 1);
@@ -97,7 +103,6 @@
             transform-origin: left center;
             transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
             transform-style: preserve-3d;
-            cursor: pointer;
             backface-visibility: hidden;
         }
 
@@ -179,7 +184,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #9ca3af; /* 默认灰色 */
+            color: #9ca3af; 
             border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
             box-shadow: 0 10px 20px rgba(0,0,0,0.4);
@@ -219,7 +224,7 @@
         .toast {
             position: fixed;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             color: white; padding: 12px 24px; border-radius: 30px;
             z-index: 2000; display: none;
         }
@@ -231,9 +236,9 @@
         }
     </style>
 </head>
-<body>
+<body class="zoom-in-mode"> <!-- 初始默认显示放大镜图标 -->
 
-    <div style="display:none;"><img src="年刊分页-01.jpg" alt="Share Cover"></div>
+    <div style="display:none;"><img src="https://raw.githubusercontent.com/2352899314-cell/weilaifangzhou/main/年刊分页-01.jpg" alt="Share Cover"></div>
 
     <div id="sidebar">
         <div class="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
@@ -313,20 +318,19 @@
     </div>
 
     <script>
+        const repoBase = "https://raw.githubusercontent.com/2352899314-cell/weilaifangzhou/main/";
         const imageList = [
-            "年刊分页-01.jpg", "年刊分页-02.jpg", "年刊分页-03.jpg", "年刊分页-04.jpg",
-            "年刊分页-05.jpg", "年刊分页-06.jpg", "年刊分页-07.jpg", "年刊分页-08.jpg",
-            "年刊分页-09.jpg", "年刊分页-10.jpg", "年刊分页-11.jpg", "年刊分页-12.jpg",
-            "年刊分页-13.jpg", "年刊分页-14.jpg", "年刊分页-15.jpg", "年刊分页-16.jpg",
-            "年刊分页-17.jpg", "年刊分页-18.jpg", "年刊分页-19.jpg", "年刊分页-20.jpg"
+            repoBase + "年刊分页-01.jpg", repoBase + "年刊分页-02.jpg", repoBase + "年刊分页-03.jpg", repoBase + "年刊分页-04.jpg",
+            repoBase + "年刊分页-05.jpg", repoBase + "年刊分页-06.jpg", repoBase + "年刊分页-07.jpg", repoBase + "年刊分页-08.jpg",
+            repoBase + "年刊分页-09.jpg", repoBase + "年刊分页-10.jpg", repoBase + "年刊分页-11.jpg", repoBase + "年刊分页-12.jpg",
+            repoBase + "年刊分页-13.jpg", repoBase + "年刊分页-14.jpg", repoBase + "年刊分页-15.jpg", repoBase + "年刊分页-16.jpg",
+            repoBase + "年刊分页-17.jpg", repoBase + "年刊分页-18.jpg", repoBase + "年刊分页-19.jpg", repoBase + "年刊分页-20.jpg"
         ];
 
-        // 翻页音频
         const flipAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
         flipAudio.volume = 0.5;
         let audioUnlocked = false;
 
-        // 全局状态变量
         const book = document.getElementById('book');
         const transformLayer = document.getElementById('transform-layer');
         const thumbList = document.getElementById('thumbnail-list');
@@ -338,23 +342,20 @@
         let scale = 1, baseScale = 1, posX = 0, posY = 0, rotation = 0;
         let isDoublePageMode = true;
 
-        // 拖拽与交互状态
         let isDragging = false, dragStartX = 0, dragStartY = 0;
         let longPressTimer = null, longPressInterval = null, isLongPressed = false;
         let touchStartX = 0, touchStartY = 0;
 
-        // 首次点击解锁音频引擎（移动端必需）
         function unlockAudio() {
             if (audioUnlocked) return;
             flipAudio.play().then(() => {
                 flipAudio.pause();
                 flipAudio.currentTime = 0;
                 audioUnlocked = true;
-            }).catch(e => console.log("Audio unlock interaction needed"));
+            }).catch(e => console.log("Unlock needed"));
         }
 
         function init() {
-            // 初始化二维码
             const currentUrl = window.location.href;
             document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
 
@@ -378,24 +379,21 @@
                     </div>
                 `;
                 
-                // 桌面端鼠标交互
-                leaf.addEventListener('mousedown', (e) => {
-                    unlockAudio();
-                    startInteraction(e.clientX, e.clientY);
-                });
-                
-                // 移动端触摸交互
+                leaf.addEventListener('mousedown', (e) => { unlockAudio(); startInteraction(e.clientX, e.clientY); });
                 leaf.addEventListener('touchstart', (e) => {
                     unlockAudio();
                     const touch = e.touches[0];
-                    touchStartX = touch.clientX;
-                    touchStartY = touch.clientY;
+                    touchStartX = touch.clientX; touchStartY = touch.clientY;
                     startInteraction(touch.clientX, touch.clientY);
                 }, { passive: true });
 
                 leaf.onclick = (e) => {
-                    if(isLongPressed || scale > baseScale * 1.2) return;
-                    // 滑动距离过大时不触发点击翻页
+                    if(isLongPressed) return;
+                    // 如果处于明显缩放状态，点击则执行缩小还原，而不是翻页
+                    if(scale > baseScale + 0.1) {
+                        adjustZoom();
+                        return;
+                    }
                     if (Math.abs(touchStartX - (e.clientX || touchStartX)) > 20) return;
                     leaf.classList.contains('flipped') ? (i === currentLeaf - 1 && prevPage()) : (i === currentLeaf && nextPage());
                 };
@@ -426,9 +424,7 @@
             const dir = x > centerX ? 'next' : 'prev';
 
             isLongPressed = false;
-            clearTimeout(longPressTimer); 
-            clearInterval(longPressInterval);
-
+            clearTimeout(longPressTimer); clearInterval(longPressInterval);
             longPressTimer = setTimeout(() => {
                 isLongPressed = true;
                 longPressInterval = setInterval(() => {
@@ -439,27 +435,16 @@
             }, 500);
         }
 
-        function endInteraction() {
-            clearTimeout(longPressTimer); 
-            clearInterval(longPressInterval);
-        }
-
-        window.addEventListener('mouseup', endInteraction);
+        window.addEventListener('mouseup', () => { clearTimeout(longPressTimer); clearInterval(longPressInterval); });
         window.addEventListener('touchend', (e) => {
-            endInteraction();
+            clearTimeout(longPressTimer); clearInterval(longPressInterval);
             if(scale > baseScale * 1.2 || isLongPressed) return;
             const touch = e.changedTouches[0];
             const diffX = touch.clientX - touchStartX;
-            // 简单滑动检测
-            if (Math.abs(diffX) > 60) {
-                diffX < 0 ? nextPage() : prevPage();
-            }
+            if (Math.abs(diffX) > 60) { diffX < 0 ? nextPage() : prevPage(); }
         });
 
-        function playFlipEffect() { 
-            flipAudio.currentTime = 0; 
-            flipAudio.play().catch(e => console.log("Audio play blocked")); 
-        }
+        function playFlipEffect() { flipAudio.currentTime = 0; flipAudio.play().catch(() => {}); }
 
         function onImgErr(img, n) {
             img.onerror = null;
@@ -482,7 +467,7 @@
         function fitToScreen() {
             const vpW = window.innerWidth - 20; 
             const vpH = window.innerHeight - 160; 
-            const isSingle = !isDoublePageMode || (window.innerWidth < 768 && (currentLeaf === 0 || currentLeaf === totalLeaves));
+            const isSingle = !isDoublePageMode || currentLeaf === 0 || currentLeaf === totalLeaves;
             const targetW = isSingle ? 1000 : 2000; 
             const targetH = 1414; 
             baseScale = Math.min(vpW / targetW, vpH / targetH);
@@ -532,13 +517,14 @@
             thumbs.forEach((t, i) => i === currentLeaf ? t.classList.add('active') : t.classList.remove('active'));
             
             let shiftX = 0;
-            const isSingle = !isDoublePageMode || (currentLeaf === 0 || currentLeaf === totalLeaves);
+            const isSingle = !isDoublePageMode || currentLeaf === 0 || currentLeaf === totalLeaves;
             if (isSingle) {
                 if (currentLeaf === 0) shiftX = -500;
                 else if (currentLeaf === totalLeaves) shiftX = 500;
                 else shiftX = -500; 
             }
             book.style.transform = `translateX(${shiftX}px)`;
+            
             const pages = document.querySelectorAll('.page');
             pages.forEach((p, i) => p.style.zIndex = i < currentLeaf ? i : totalLeaves - i);
             document.getElementById('prev-btn').disabled = currentLeaf === 0;
@@ -554,79 +540,84 @@
             updateView();
         }
 
-        function toggleRotation() {
-            rotation = (rotation + 90) % 360;
-            applyTransform();
-        }
+        function toggleRotation() { rotation = (rotation + 90) % 360; applyTransform(); }
 
         function shareLink() {
             const url = window.location.href;
             const temp = document.createElement('input');
             document.body.appendChild(temp);
-            temp.value = url;
-            temp.select();
+            temp.value = url; temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
-            const toast = document.getElementById('toast');
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2000);
-        }   超文本标记语言
+            showToast("链接已复制，快去分享吧！");
+        }
 
-           < !DOCTYPE html   超文本标记语言>function toggleSidebar() {
+        function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
         }
 
         function toggleFullscreen() {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else if (document.exitFullscreen) document.exitFullscreen();
+            try {
+                if (!document.fullscreenElement) {
+                    const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen || document.documentElement.mozRequestFullScreen || document.documentElement.msRequestFullscreen;
+                    if (req) req.call(document.documentElement).catch(() => showToast("全屏功能在此环境下被禁用"));
+                    else showToast("浏览器不支持全屏");
+                } else {
+                    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+                    if (exit) exit.call(document);
+                }
+            } catch (e) { showToast("无法切换全屏"); }
         }
 
-        function adjustZoom() {
-            if (scale > baseScale * 1.5) { scale = baseScale; posX = 0; posY = 0; }
-            else { scale = baseScale * 2.5; }
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg; toast.style.display = 'block';
+            setTimeout   超文本标记语言(() => { toast.style   风格.display   显示 = 'none'   “没有”; }, 2500);
+        }
+
+        function adjustZoom() {   函数adjustZoom() {
+            if (scale > baseScale * 1.5) { scale = baseScale; posX = 0; posY = 0; }如果(底部楼梯* 1.5)(底部楼梯=底部楼梯)posX = 0;posY = 0;)
+            else { scale = baseScale * 2.2; }
             applyTransform();
         }
 
-        function applyTransform() {
-            transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
+        function applyTransform() {函数applyTransform() {
+            transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;transformLayer.style   风格.transform   变换 = ' translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg) '；
+            
+            // 核心：更新 body 的 class 以切换鼠标指针图标
+            if (scale > baseScale + 0.1) {
+                document.body.classList.remove('zoom-in-mode');
+                document.body.classList.add('zoom-out-mode');
+            } else {
+                document.body.classList.remove('zoom-out-mode');
+                document.body.classList.add('zoom-in-mode');
+            }
         }
 
-        const startMove = (x, y) => { 
-            if(scale <= baseScale + 0.05) return; 
+        const startMove = (x, y) => {    const   常量 startMove = (x, y) => {
+            if(scale <= baseScale + 0.05) return; if   如果(scale   规模 <= baseScale 0.05) return；
             isDragging = true; dragStartX = x - posX; dragStartY = y - posY; 
-            transformLayer.style.transition = 'none'; 
+            transformLayer.style.transition = 'none'; transformLayer.style   风格.transition   过渡 = 'none'   “没有”；
         };
-        const handleMove = (x, y) => { if(!isDragging) return; posX = x - dragStartX; posY = y - dragStartY; applyTransform(); };
-        const endMove = () => { isDragging = false; transformLayer.style.transition = 'transform 0.4s ease'; };
+        const handleMove = (x, y) => { if(!isDragging) return; posX = x - dragStartX; posY = y - dragStartY; applyTransform(); };const   常量 handleMove = (x, y) => {if   如果(！isDragging)返回;posX = x - dragStartX；posY = y - dragStartY；applyTransform ();}；
+        const endMove = () => { isDragging = false; transformLayer.style.transition = 'transform 0.4s ease'; };const   常量 endMove = () => {isdrag = false；transformLayer.style   风格.transition   过渡 = 'transform 0.4s ease'   转换0.4s ease；}；
         
-        viewport.addEventListener('mousedown', e => startMove(e.clientX, e.clientY));
-        window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
-        window.addEventListener('mouseup', endMove);
-        viewport.addEventListener('touchstart', e => {
-            if (scale > baseScale + 0.05) startMove(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: true });
-        viewport.addEventListener('touchmove', e => { 
-            if(isDragging) {
-                e.preventDefault(); 
-                handleMove(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, { passive: false });
-        viewport.addEventListener('touchend', endMove);
-        
-        viewport.onwheel = e => { 
-            e.preventDefault(); 
-            scale = Math.min(Math.max(scale + (e.deltaY > 0 ? -0.1 : 0.1), baseScale * 0.5), baseScale * 6); 
-            applyTransform(); 
-        };
+        viewport.addEventListener('mousedown', e => startMove(e.clientX, e.clientY));viewport。addEventListener(“老鼠”)，e = >开始移动(e)。clientX, clientY));
+        window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));窗口。addEventListener(“mousemov”)，e = > handleMove(e)。clientX, clientY));
+        window.addEventListener('mouseup', endMove);窗口。addEventListener (mouseup, endMove);
+        viewport.addEventListener('touchstart', e => { if (scale > baseScale + 0.05) startMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+        viewport.addEventListener('touchmove', e => { if(isDragging) { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: false });
+        viewport.addEventListener('touchend', endMove);viewport。addEventListener(’touchend’endMove);
+        viewport.onwheel = e => { e.preventDefault(); scale = Math.min(Math.max(scale + (e.deltaY > 0 ? -0.1 : 0.1), baseScale * 0.5), baseScale * 6); applyTransform(); };
 
         window.onload = init;
-        window.onresize = fitToScreen;
-        document.addEventListener('keydown', e => {
-            if(e.key === 'ArrowRight') nextPage();
-            if(e.key === 'ArrowLeft') prevPage();
-            if(e.key === 'Escape') { scale = baseScale; posX = 0; posY = 0; applyTransform(); }
+        window.onresize = fitToScreen;窗口。onresize =植屏;
+        document.addEventListener('keydown', e => {文档。addEventListener('keydown'   “keydown”, e => {
+            if(e.key === 'ArrowRight') nextPage();if   如果(和。(') nextPage(');
+            if(e.key === 'ArrowLeft') prevPage();如果(e。key === 'ArrowLeft'   “ArrowLeft”) prevPage()；
+            if(e.key === 'Escape') { scale = baseScale; posX = 0; posY = 0; applyTransform(); }如果(e。key === 'Escape'   “逃”) {scale   规模 = baseScale；posX = 0；posY = 0；applyTransform ();}
         });
-    </script>
-</body>
-</html>
+    </script>   < / script>
+</body>   < / body>
+</html>   < / html>
