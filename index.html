@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>未来方舟 2025 幸福年报 - 专业版</title>
+    <title>未来方洲 2025 幸福年报 - 高清全屏版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --book-width: 450px;
             --book-height: 636px;
-            --bg-color: #0f1115;
-            --panel-color: rgba(30, 32, 38, 0.95);
+            --bg-color: #0d0e12;
+            --panel-color: rgba(26, 28, 34, 0.98);
             --accent-color: #fbbf24;
-            --shadow-intensity: rgba(0, 0, 0, 0.6);
+            /* 极淡的阴影强度，不再遮挡内容 */
+            --shadow-intensity: rgba(0, 0, 0, 0.15);
         }
 
         body {
@@ -22,37 +23,37 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            color: #fff;
-            font-family: -apple-system, system-ui, sans-serif;
+            color: #e5e7eb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        /* 侧边栏 */
+        /* 侧边栏目录 */
         #sidebar {
             position: fixed;
-            left: -260px;
+            left: -300px;
             top: 0;
             bottom: 0;
-            width: 260px;
+            width: 300px;
             background: var(--panel-color);
             z-index: 1000;
             transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border-right: 1px solid #333;
             display: flex;
             flex-direction: column;
+            backdrop-filter: blur(15px);
         }
-
         #sidebar.open { left: 0; }
 
         .thumbnail-item {
-            padding: 10px;
+            padding: 15px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             border-bottom: 1px solid #222;
         }
-        .thumbnail-item:hover { background: #333; }
-        .thumbnail-item.active { border-left: 4px solid var(--accent-color); background: #222; }
+        .thumbnail-item:hover { background: rgba(255,255,255,0.05); }
+        .thumbnail-item.active { border-left: 4px solid var(--accent-color); background: rgba(251, 191, 36, 0.1); }
 
-        /* 视口 */
+        /* 视口容器 */
         #viewport {
             flex: 1;
             display: flex;
@@ -61,6 +62,7 @@
             perspective: 3000px;
             overflow: hidden;
             position: relative;
+            touch-action: none;
         }
 
         .book-transform-layer {
@@ -99,16 +101,22 @@
             backface-visibility: hidden;
             overflow: hidden;
             image-rendering: -webkit-optimize-contrast;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.1);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.03);
         }
 
-        .page-content img { width: 100%; height: 100%; object-fit: cover; }
+        .page-content img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            -webkit-user-drag: none;
+        }
 
-        /* 阴影效果 */
+        /* 调淡的中缝阴影 */
         .page-content::after {
             content: '';
             position: absolute;
-            top: 0; width: 80px; height: 100%; z-index: 10;
+            top: 0; width: 60px; height: 100%; z-index: 10;
+            pointer-events: none;
         }
         .front::after { left: 0; background: linear-gradient(to right, var(--shadow-intensity) 0%, rgba(0,0,0,0) 100%); }
         .back::after { right: 0; background: linear-gradient(to left, var(--shadow-intensity) 0%, rgba(0,0,0,0) 100%); }
@@ -116,90 +124,90 @@
         .back { transform: rotateY(180deg); }
         .page.flipped { transform: rotateY(-180deg); }
 
-        /* 控制台升级 */
+        /* 底部浮动手柄 */
         .floating-controls {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--panel-color);
-            padding: 8px 24px;
-            border-radius: 50px;
+            padding: 10px 24px;
+            border-radius: 60px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            gap: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
             z-index: 500;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
         }
 
         .icon-btn {
-            width: 40px; height: 40px;
+            width: 42px; height: 42px;
             display: flex; align-items: center; justify-content: center;
             border-radius: 50%;
             transition: all 0.2s;
-            color: #ccc;
+            color: #9ca3af;
         }
-        .icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--accent-color); }
+        .icon-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: var(--accent-color); }
         .icon-btn.active { color: var(--accent-color); }
         .icon-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
-        /* 进度条 */
         .page-input {
-            background: transparent;
-            border: 1px solid #444;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid #3f3f46;
             color: #fff;
-            width: 40px;
+            width: 50px;
             text-align: center;
-            font-size: 12px;
-            border-radius: 4px;
+            font-size: 15px;
+            border-radius: 8px;
+            padding: 4px 0;
+            font-family: monospace;
         }
 
-        /* 遮罩 */
         #overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
             display: none;
             z-index: 900;
         }
 
-        @media (max-width: 768px) {
-            .floating-controls { padding: 6px 12px; gap: 8px; width: 95%; justify-content: space-between; }
+        /* 响应式微调 */
+        @media (max-width: 640px) {
             .hide-mobile { display: none; }
+            .floating-controls { width: 92%; justify-content: space-around; padding: 8px 12px; bottom: 20px; }
+            .page-input { width: 40px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 侧边栏 -->
+    <!-- 侧边栏索引 -->
     <div id="sidebar">
-        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-            <span class="font-bold">目录索引</span>
-            <button onclick="toggleSidebar()" class="text-gray-400">✕</button>
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
+            <span class="font-bold tracking-widest text-sm">目录索引 / INDEX</span>
+            <button onclick="toggleSidebar()" class="text-gray-500 hover:text-white transition-colors">✕</button>
         </div>
-        <div id="thumbnail-list" class="flex-1 overflow-y-auto p-2">
-            <!-- 自动生成 -->
+        <div id="thumbnail-list" class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            <!-- JS 生成 -->
         </div>
     </div>
 
-    <!-- 顶部 -->
-    <header class="p-4 flex justify-between items-center bg-[#000] z-50">
-        <div class="flex items-center gap-4">
-            <button onclick="toggleSidebar()" class="icon-btn">
+    <!-- 顶部状态栏 -->
+    <header class="p-4 flex justify-between items-center bg-black/40 backdrop-blur-md z-50 border-b border-white/5">
+        <div class="flex items-center gap-5">
+            <button onclick="toggleSidebar()" class="icon-btn" title="查看目录">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
-            <h1 class="text-md font-medium tracking-tight hide-mobile">未来方舟 2025 幸福年报</h1>
+            <div>
+                <h1 class="text-sm font-bold tracking-wider">未来方洲 2025 幸福年报</h1>
+                <p class="text-[9px] text-gray-500 uppercase tracking-[0.2em] hide-mobile">Annual Digital Report</p>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <button id="bgm-btn" onclick="toggleBGM()" class="icon-btn">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
-            </button>
-            <button onclick="toggleFullscreen()" class="icon-btn hide-mobile">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
-            </button>
-        </div>
+        <button onclick="toggleFullscreen()" class="icon-btn hide-mobile" title="全屏">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
+        </button>
     </header>
 
     <div id="viewport">
@@ -209,38 +217,31 @@
         </div>
     </div>
 
-    <!-- 底部功能台 -->
+    <!-- 底部导航中心 -->
     <div class="floating-controls">
         <button class="icon-btn" id="prev-btn" onclick="prevPage()">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
         </button>
 
-        <div class="flex items-center gap-2">
-            <input type="text" id="page-jump-input" class="page-input" value="1" onchange="jumpToPageInput(this.value)">
-            <span class="text-xs text-gray-500">/ 20</span>
+        <div class="flex items-center gap-3">
+            <input type="text" id="page-jump-input" class="page-input" value="1" onchange="handleJump(this.value)">
+            <span class="text-xs text-gray-500 font-mono">/ 20</span>
         </div>
 
         <button class="icon-btn" id="next-btn" onclick="nextPage()">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
-        <div class="w-px h-6 bg-gray-700 mx-2"></div>
+        <div class="w-px h-6 bg-white/10 mx-1 hide-mobile"></div>
 
-        <button class="icon-btn" id="autoplay-btn" onclick="toggleAutoplay()" title="自动播放">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-
-        <button class="icon-btn" onclick="adjustZoom(-0.2)" title="缩小">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
-        </button>
-        
-        <button class="icon-btn" onclick="adjustZoom(0.2)" title="放大">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <button class="icon-btn" onclick="adjustZoom(0.4)" title="放大/查看细节">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
         </button>
     </div>
 
     <script>
-        const imageSources = [
+        // 图片资源定义
+        const images = [
             "年刊分页-01.jpg", "年刊分页-02.jpg", "年刊分页-03.jpg", "年刊分页-04.jpg",
             "年刊分页-05.jpg", "年刊分页-06.jpg", "年刊分页-07.jpg", "年刊分页-08.jpg",
             "年刊分页-09.jpg", "年刊分页-10.jpg", "年刊分页-11.jpg", "年刊分页-12.jpg",
@@ -248,190 +249,201 @@
             "年刊分页-17.jpg", "年刊分页-18.jpg", "年刊分页-19.jpg", "年刊分页-20.jpg"
         ];
 
-        const flipSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-        const bgm = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-        bgm.loop = true;
+        // 核心音频：纸张翻动声
+        const flipAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+        flipAudio.volume = 0.6;
 
         const book = document.getElementById('book');
         const transformLayer = document.getElementById('transform-layer');
         const thumbList = document.getElementById('thumbnail-list');
         const pageJumpInput = document.getElementById('page-jump-input');
         
-        const totalLeaves = imageSources.length / 2;
-        let currentLeafIndex = 0;
-        let currentScale = 1;
+        const totalLeaves = images.length / 2;
+        let currentLeaf = 0;
+        let scale = 1;
         let baseScale = 1;
         let posX = 0, posY = 0;
-        let isDragging = false, startX, startY;
-        let isAutoplaying = false, autoplayTimer;
+        let isDragging = false, dragStartX, dragStartY;
 
         function init() {
             book.innerHTML = '';
             thumbList.innerHTML = '';
+            
             for(let i = 0; i < totalLeaves; i++) {
-                // 1. 生成书页
-                const page = document.createElement('div');
-                page.className = 'page';
-                page.style.zIndex = totalLeaves - i;
-                page.innerHTML = `
-                    <div class="page-content front"><img src="${imageSources[i*2]}" onerror="imgFallback(this, ${i*2+1})"></div>
-                    <div class="page-content back"><img src="${imageSources[i*2+1]}" onerror="imgFallback(this, ${i*2+2})"></div>
+                // 构建物理书页
+                const leaf = document.createElement('div');
+                leaf.className = 'page';
+                leaf.style.zIndex = totalLeaves - i;
+                leaf.innerHTML = `
+                    <div class="page-content front"><img src="${images[i*2]}" onerror="onImgErr(this, ${i*2+1})"></div>
+                    <div class="page-content back"><img src="${images[i*2+1]}" onerror="onImgErr(this, ${i*2+2})"></div>
                 `;
-                page.onclick = () => {
-                    if(currentScale > baseScale + 0.1) return;
-                    page.classList.contains('flipped') ? (i === currentLeafIndex - 1 && prevPage()) : (i === currentLeafIndex && nextPage());
+                
+                leaf.onclick = () => {
+                    // 放大模式时点击不翻页，方便移动
+                    if(scale > baseScale + 0.1) return;
+                    leaf.classList.contains('flipped') ? (i === currentLeaf - 1 && prevPage()) : (i === currentLeaf && nextPage());
                 };
-                book.appendChild(page);
+                book.appendChild(leaf);
 
-                // 2. 生成缩略图
+                // 构建缩略图
                 const thumb = document.createElement('div');
-                thumb.className = `thumbnail-item flex gap-3 items-center`;
+                thumb.className = `thumbnail-item flex gap-4 items-center rounded-lg mb-2`;
                 thumb.onclick = () => { jumpToLeaf(i); toggleSidebar(); };
                 thumb.innerHTML = `
-                    <div class="w-12 h-16 bg-white shrink-0 overflow-hidden shadow">
-                        <img src="${imageSources[i*2]}" class="w-full h-full object-cover">
+                    <div class="w-16 h-20 bg-zinc-800 shrink-0 overflow-hidden shadow-xl rounded-md border border-white/5">
+                        <img src="${images[i*2]}" class="w-full h-full object-cover">
                     </div>
-                    <div class="text-xs">第 ${i*2+1}-${i*2+2} 页</div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-white">PAGE ${i*2+1}-${i*2+2}</span>
+                        <span class="text-[10px] text-gray-500">双页预览</span>
+                    </div>
                 `;
                 thumbList.appendChild(thumb);
             }
-            calculateBaseScale();
-            updateUI();
+            
+            // 确保渲染后执行适配
+            setTimeout(fitToScreen, 150);
+            updateView();
         }
 
-        function imgFallback(img, n) {
+        function onImgErr(img, n) {
             img.onerror = null;
             img.src = `https://picsum.photos/seed/ark${n}/900/1200?text=Page+${n}`;
         }
 
-        function nextPage() {
-            if (currentLeafIndex < totalLeaves) {
-                playSound();
-                document.querySelectorAll('.page')[currentLeafIndex].classList.add('flipped');
-                currentLeafIndex++;
-                updateUI();
-            } else if (isAutoplaying) toggleAutoplay();
+        // 核心算法：全屏自适应满屏尺寸
+        function fitToScreen() {
+            const viewportW = window.innerWidth - 30; 
+            const viewportH = window.innerHeight - 150; 
+            const targetW = 900; 
+            const targetH = 636; 
+            
+            // 计算适配比例
+            baseScale = Math.min(viewportW / targetW, viewportH / targetH);
+            scale = baseScale;
+            posX = 0; 
+            posY = 0;
+            applyTransform();
         }
 
-        function prevPage() {
-            if (currentLeafIndex > 0) {
-                playSound();
-                currentLeafIndex--;
-                document.querySelectorAll('.page')[currentLeafIndex].classList.remove('flipped');
-                updateUI();
+        function playFlipEffect() {
+            flipAudio.currentTime = 0;
+            flipAudio.play().catch(() => {});
+        }
+
+        function nextPage() {
+            if (currentLeaf < totalLeaves) {
+                playFlipEffect();
+                document.querySelectorAll('.page')[currentLeaf].classList.add('flipped');
+                currentLeaf++;
+                updateView();
             }
         }
 
-        function jumpToLeaf(index) {
-            const pages = document.querySelectorAll('.page');
-            currentLeafIndex = index;
-            pages.forEach((p, i) => {
-                i < index ? p.classList.add('flipped') : p.classList.remove('flipped');
-            });
-            updateUI();
+        function prevPage() {
+            if (currentLeaf > 0) {
+                playFlipEffect();
+                currentLeaf--;
+                document.querySelectorAll('.page')[currentLeaf].classList.remove('flipped');
+                updateView();
+            }
         }
 
-        function jumpToPageInput(val) {
+        function jumpToLeaf(idx) {
+            const pages = document.querySelectorAll('.page');
+            currentLeaf = idx;
+            pages.forEach((p, i) => {
+                i < idx ? p.classList.add('flipped') : p.classList.remove('flipped');
+            });
+            updateView();
+        }
+
+        function handleJump(val) {
             let n = parseInt(val);
             if (isNaN(n) || n < 1) n = 1;
             if (n > 20) n = 20;
             jumpToLeaf(Math.floor((n-1)/2));
         }
 
-        function updateUI() {
-            // 更新页码显示
-            const pStart = currentLeafIndex === 0 ? 1 : (currentLeafIndex === totalLeaves ? 20 : currentLeafIndex * 2);
-            pageJumpInput.value = pStart;
+        function updateView() {
+            // 页码显示
+            const displayPage = currentLeaf === 0 ? 1 : (currentLeaf === totalLeaves ? 20 : currentLeaf * 2);
+            pageJumpInput.value = displayPage;
 
-            // 侧边栏激活态
+            // 目录状态
             const thumbs = document.querySelectorAll('.thumbnail-item');
-            thumbs.forEach((t, i) => i === currentLeafIndex ? t.classList.add('active') : t.classList.remove('active'));
+            thumbs.forEach((t, i) => i === currentLeaf ? t.classList.add('active') : t.classList.remove('active'));
 
-            // 书本偏移 (封面/封底居中)
-            let bookX = 0;
-            if (currentLeafIndex === 0) bookX = -225;
-            else if (currentLeafIndex === totalLeaves) bookX = 225;
-            book.style.transform = `translateX(${bookX}px)`;
+            // 封面和封底居中算法
+            let shiftX = 0;
+            if (currentLeaf === 0) shiftX = -225; // 第一页居中
+            else if (currentLeaf === totalLeaves) shiftX = 225; // 最后一页居中
+            book.style.transform = `translateX(${shiftX}px)`;
 
-            // 层级
+            // 层级深度管理
             const pages = document.querySelectorAll('.page');
-            pages.forEach((p, i) => p.style.zIndex = i < currentLeafIndex ? i : totalLeaves - i);
+            pages.forEach((p, i) => p.style.zIndex = i < currentLeaf ? i : totalLeaves - i);
 
-            document.getElementById('prev-btn').disabled = currentLeafIndex === 0;
-            document.getElementById('next-btn').disabled = currentLeafIndex === totalLeaves;
+            document.getElementById('prev-btn').disabled = currentLeaf === 0;
+            document.getElementById('next-btn').disabled = currentLeaf === totalLeaves;
         }
-
-        // --- 核心交互逻辑 ---
 
         function toggleSidebar() {
             const sb = document.getElementById('sidebar');
             const ov = document.getElementById('overlay');
-            sb.classList.toggle('open');
-            ov.style.display = sb.classList.contains('open') ? 'block' : 'none';
-        }
-
-        function toggleAutoplay() {
-            isAutoplaying = !isAutoplaying;
-            const btn = document.getElementById('autoplay-btn');
-            if (isAutoplaying) {
-                btn.classList.add('active');
-                btn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
-                autoplayTimer = setInterval(nextPage, 4000);
-            } else {
-                btn.classList.remove('active');
-                btn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
-                clearInterval(autoplayTimer);
-            }
-        }
-
-        function toggleBGM() {
-            const btn = document.getElementById('bgm-btn');
-            bgm.paused ? (bgm.play(), btn.classList.add('active')) : (bgm.pause(), btn.classList.remove('active'));
+            const isOpen = sb.classList.toggle('open');
+            ov.style.display = isOpen ? 'block' : 'none';
         }
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
         }
 
-        function adjustZoom(d) {
-            currentScale = Math.min(Math.max(currentScale + d, baseScale * 0.5), baseScale * 5);
-            if (currentScale <= baseScale + 0.05) { currentScale = baseScale; posX = 0; posY = 0; }
-            updateTransform();
+        function adjustZoom(step) {
+            // 循环切换缩放：正常 -> 放大 -> 正常
+            if (scale > baseScale * 1.5) {
+                scale = baseScale; posX = 0; posY = 0;
+            } else {
+                scale = baseScale * 2.5; 
+            }
+            applyTransform();
         }
 
-        function updateTransform() {
-            transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${currentScale})`;
+        function applyTransform() {
+            transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
         }
 
-        function calculateBaseScale() {
-            baseScale = Math.min((window.innerWidth - 60) / 900, (window.innerHeight - 160) / 636);
-            currentScale = baseScale;
-            updateTransform();
-        }
-
-        function playSound() { flipSound.currentTime = 0; flipSound.play().catch(()=>{}); }
-
-        // 拖拽逻辑
+        // 移动与缩放交互逻辑
         const vp = document.getElementById('viewport');
-        const onStart = (x, y) => { if(currentScale <= baseScale) return; isDragging = true; startX = x - posX; startY = y - posY; transformLayer.style.transition = 'none'; };
-        const onMove = (x, y) => { if(!isDragging) return; posX = x - startX; posY = y - startY; updateTransform(); };
-        const onEnd = () => { isDragging = false; transformLayer.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)'; };
+        const startMove = (x, y) => { 
+            if(scale <= baseScale + 0.1) return; 
+            isDragging = true; dragStartX = x - posX; dragStartY = y - posY; 
+            transformLayer.style.transition = 'none'; 
+        };
+        const handleMove = (x, y) => { if(!isDragging) return; posX = x - dragStartX; posY = y - dragStartY; applyTransform(); };
+        const endMove = () => { isDragging = false; transformLayer.style.transition = 'transform 0.4s cubic-bezier(0.2, 0, 0.2, 1)'; };
 
-        vp.onmousedown = e => onStart(e.clientX, e.clientY);
-        window.onmousemove = e => onMove(e.clientX, e.clientY);
-        window.onmouseup = onEnd;
-        vp.ontouchstart = e => onStart(e.touches[0].clientX, e.touches[0].clientY);
-        vp.ontouchmove = e => { if(isDragging) e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); };
-        vp.ontouchend = onEnd;
-        vp.onwheel = e => { e.preventDefault(); adjustZoom(e.deltaY > 0 ? -0.1 : 0.1); };
+        vp.onmousedown = e => startMove(e.clientX, e.clientY);
+        window.onmousemove = e => handleMove(e.clientX, e.clientY);
+        window.onmouseup = endMove;
+        
+        vp.ontouchstart = e => startMove(e.touches[0].clientX, e.touches[0].clientY);
+        vp.ontouchmove = e => { if(isDragging) e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); };
+        vp.ontouchend = endMove;
+
+        // 滚轮控制缩放
+        vp.onwheel = e => { e.preventDefault(); scale = Math.min(Math.max(scale + (e.deltaY > 0 ? -0.1 : 0.1), baseScale), baseScale * 5); applyTransform(); };
 
         window.onload = init;
-        window.onresize = calculateBaseScale;
+        window.onresize = fitToScreen;
+        
+        // 物理按键控制
         document.addEventListener('keydown', e => {
             if(e.key === 'ArrowRight') nextPage();
             if(e.key === 'ArrowLeft') prevPage();
-            if(e.key === 'Escape') { currentScale = baseScale; resetView(); }
+            if(e.key === 'Escape') { scale = baseScale; posX = 0; posY = 0; applyTransform(); }
         });
     </script>
 </body>
