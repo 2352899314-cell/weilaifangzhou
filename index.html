@@ -309,8 +309,8 @@
             });
         }
 
-        function nextPage() {   函数nextPage() {
-            if (currentLeaf < totalLeaves) {if   如果 (currentLeaf < totalLeaves) {
+        function nextPage() {
+            if (currentLeaf < totalLeaves) {
                 currentLeaf++;
                 flipAudio.currentTime = 0; flipAudio.play().catch(()=>{});
                 fitToScreen(); // 切换时重新计算缩放以适应单双页
@@ -318,22 +318,22 @@
             }
         }
 
-        function prevPage() {   函数prevPage() {
-            if (currentLeaf > 0) {   if   如果 (currentLeaf > 0) {
-                currentLeaf--;   currentLeaf——;
+        function prevPage() {
+            if (currentLeaf > 0) {
+                currentLeaf--;
                 flipAudio.currentTime = 0; flipAudio.play().catch(()=>{});
                 fitToScreen();
                 updateView();
             }
         }
 
-        function jumpToLeaf(idx) {   函数jumpToLeaf(idx) {
-            currentLeaf = idx;   currentLeaf = idx；
+        function jumpToLeaf(idx) {
+            currentLeaf = idx;
             fitToScreen();
             updateView();
         }
 
-        function handleJump(val) {   函数handleJump(val) {
+        function handleJump(val) {
             let n = parseInt(val);
             if(isNaN(n)) return;
             jumpToLeaf(Math.floor(Math.max(0, Math.min(19, n-1)) / 2));
@@ -344,12 +344,12 @@
             fitToScreen();
         }
 
-        function toggleSidebar() {   函数toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');. getelementbyid(“侧边栏”).classList   班级名册.toggle   切换(“开放”);
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('overlay').classList.toggle('hidden');
         }
 
-        function applyTransform() {函数applyTransform() {
+        function applyTransform() {
             transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
         }
 
@@ -374,11 +374,11 @@
         };
 
         window.onload = init;
-        window.onresize = fitToScreen;窗口。onresize =植屏;
+        window.onresize = fitToScreen;
         document.onkeydown = (e) => {
             if(e.key === "ArrowRight") nextPage();
             if(e.key === "ArrowLeft") prevPage();
         };
-    </script>   < / script>
-</body>   < / body>
-</   & lt;html>
+    </script>
+</body>
+</html>
