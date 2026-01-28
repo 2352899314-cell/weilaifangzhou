@@ -3,17 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>未来方洲 2025 幸福年报 - 增强高清版</title>
+    
+    <!-- 微信分享配置 -->
+    <title>未来方洲 2025 幸福年报</title>
+    <meta name="description" content="点击开启 2025 幸福篇章，见证未来方洲的年度印记。">
+    <meta property="og:title" content="未来方洲 2025 幸福年报">
+    <meta property="og:description" content="点击开启 2025 幸福篇章，见证未来方洲的年度印记。">
+    <meta property="og:image" content="年刊分页-01.jpg"> 
+    <meta property="og:type" content="website">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            /* 高清建模分辨率 */
             --book-width: 1000px; 
             --book-height: 1414px;
             --bg-color: #0d0e12;
             --panel-color: rgba(26, 28, 34, 0.98);
             --accent-color: #fbbf24;
-            --shadow-intensity: rgba(0, 0, 0, 0.12);
+            --shadow-intensity: rgba(0, 0, 0, 0.15);
         }
 
         body {
@@ -59,7 +66,7 @@
             align-items: center;
             justify-content: center;
             perspective: 4000px;
-            overflow: hidden;   溢出:隐藏;
+            overflow: hidden;
             position: relative;
             touch-action: none;
         }
@@ -111,7 +118,11 @@
             height: 100%; 
             object-fit: contain; 
             -webkit-user-drag: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
+
+        .page-content img.loaded { opacity: 1; }
 
         .page-content::after {
             content: '';
@@ -131,11 +142,11 @@
             left: 50%;
             transform: translateX(-50%);
             background: var(--panel-color);
-            padding: 8px 20px;
+            padding: 8px 24px;
             border-radius: 60px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
             z-index: 500;
@@ -153,7 +164,6 @@
         .icon-btn.active { color: var(--accent-color); background: rgba(251, 191, 36, 0.1); }
         .icon-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
-        /* 二维码容器 */
         .qr-wrapper {
             position: fixed;
             right: 30px;
@@ -169,11 +179,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--accent-color);
+            color: #9ca3af; /* 默认灰色 */
             border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
             box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            transition: transform 0.3s, color 0.3s;
         }
+        .qr-btn:hover { transform: translateY(-5px); color: var(--accent-color); }
 
         .qr-popover {
             position: absolute;
@@ -189,7 +201,6 @@
             width: 160px;
             animation: fadeIn 0.3s ease;
         }
-
         .qr-wrapper:hover .qr-popover { display: flex; }
 
         @keyframes fadeIn {
@@ -199,7 +210,7 @@
 
         #overlay {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            inset: 0;
             background: rgba(0,0,0,0.75);
             display: none;
             z-index: 900;
@@ -207,15 +218,10 @@
 
         .toast {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
-            z-index: 2000;
-            display: none;
+            color: white; padding: 12px 24px; border-radius: 30px;
+            z-index: 2000; display: none;
         }
 
         @media (max-width: 640px) {
@@ -226,6 +232,8 @@
     </style>
 </head>
 <body>
+
+    <div style="display:none;"><img src="年刊分页-01.jpg" alt="Share Cover"></div>
 
     <div id="sidebar">
         <div class="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
@@ -244,7 +252,7 @@
             </button>
             <div>
                 <h1 class="text-sm font-bold tracking-wider">未来方洲 2025 幸福年报</h1>
-                <p class="text-[9px] text-gray-500 uppercase tracking-[0.2em] hide-mobile">Ultra HD Digital Presentation</p>
+                <p class="text-[9px] text-gray-500 uppercase tracking-[0.2em] hide-mobile">Annual Digital Report</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
@@ -264,7 +272,6 @@
         </div>
     </div>
 
-    <!-- 二维码 -->
     <div class="qr-wrapper">
         <div class="qr-popover">
             <div class="text-[12px] text-black font-bold mb-2">扫一扫 手机阅读</div>
@@ -306,7 +313,7 @@
     </div>
 
     <script>
-        const images = [
+        const imageList = [
             "年刊分页-01.jpg", "年刊分页-02.jpg", "年刊分页-03.jpg", "年刊分页-04.jpg",
             "年刊分页-05.jpg", "年刊分页-06.jpg", "年刊分页-07.jpg", "年刊分页-08.jpg",
             "年刊分页-09.jpg", "年刊分页-10.jpg", "年刊分页-11.jpg", "年刊分页-12.jpg",
@@ -314,63 +321,82 @@
             "年刊分页-17.jpg", "年刊分页-18.jpg", "年刊分页-19.jpg", "年刊分页-20.jpg"
         ];
 
+        // 翻页音频
         const flipAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
         flipAudio.volume = 0.5;
+        let audioUnlocked = false;
 
+        // 全局状态变量
         const book = document.getElementById('book');
         const transformLayer = document.getElementById('transform-layer');
         const thumbList = document.getElementById('thumbnail-list');
         const pageJumpInput = document.getElementById('page-jump-input');
+        const viewport = document.getElementById('viewport');
         
-        const totalLeaves = images.length / 2;
+        const totalLeaves = imageList.length / 2;
         let currentLeaf = 0;
-        let scale = 1;
-        let baseScale = 1;
-        let posX = 0, posY = 0;
-        let rotation = 0;
-        let isDragging = false, dragStartX, dragStartY;
+        let scale = 1, baseScale = 1, posX = 0, posY = 0, rotation = 0;
         let isDoublePageMode = true;
 
+        // 拖拽与交互状态
+        let isDragging = false, dragStartX = 0, dragStartY = 0;
         let longPressTimer = null, longPressInterval = null, isLongPressed = false;
+        let touchStartX = 0, touchStartY = 0;
+
+        // 首次点击解锁音频引擎（移动端必需）
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            flipAudio.play().then(() => {
+                flipAudio.pause();
+                flipAudio.currentTime = 0;
+                audioUnlocked = true;
+            }).catch(e => console.log("Audio unlock interaction needed"));
+        }
 
         function init() {
+            // 初始化二维码
             const currentUrl = window.location.href;
             document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
 
             book.innerHTML = '';
             thumbList.innerHTML = '';
+            
             for(let i = 0; i < totalLeaves; i++) {
                 const leaf = document.createElement('div');
                 leaf.className = 'page';
                 leaf.style.zIndex = totalLeaves - i;
+                
+                const fPath = imageList[i*2];
+                const bPath = imageList[i*2+1];
+
                 leaf.innerHTML = `
-                    <div class="page-content front"><img src="${images[i*2]}" onerror="onImgErr(this, ${i*2+1})"></div>
-                    <div class="page-content back"><img src="${images[i*2+1]}" onerror="onImgErr(this, ${i*2+2})"></div>
+                    <div class="page-content front">
+                        <img data-src="${fPath}" decoding="async" onload="this.classList.add('loaded')" onerror="onImgErr(this, ${i*2+1})">
+                    </div>
+                    <div class="page-content back">
+                        <img data-src="${bPath}" decoding="async" onload="this.classList.add('loaded')" onerror="onImgErr(this, ${i*2+2})">
+                    </div>
                 `;
                 
-                const startPress = (e) => {
-                    if(scale > baseScale * 1.2) return;
-                    const x = e.clientX || (e.touches && e.touches[0].clientX);
-                    const rect = viewport.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const dir = x > centerX ? 'next' : 'prev';
-                    isLongPressed = false;
-                    clearTimeout(longPressTimer); clearInterval(longPressInterval);
-                    longPressTimer = setTimeout(() => {
-                        isLongPressed = true;
-                        longPressInterval = setInterval(() => { dir === 'next' ? nextPage() : prevPage(); }, 500);
-                        dir === 'next' ? nextPage() : prevPage();
-                    }, 500);
-                };
-                const endPress = () => { clearTimeout(longPressTimer); clearInterval(longPressInterval); };
+                // 桌面端鼠标交互
+                leaf.addEventListener('mousedown', (e) => {
+                    unlockAudio();
+                    startInteraction(e.clientX, e.clientY);
+                });
+                
+                // 移动端触摸交互
+                leaf.addEventListener('touchstart', (e) => {
+                    unlockAudio();
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    startInteraction(touch.clientX, touch.clientY);
+                }, { passive: true });
 
-                leaf.addEventListener('mousedown', startPress);
-                leaf.addEventListener('touchstart', startPress);
-                window.addEventListener('mouseup', endPress);
-                window.addEventListener('touchend', endPress);
-
-                leaf.onclick = () => {
+                leaf.onclick = (e) => {
                     if(isLongPressed || scale > baseScale * 1.2) return;
+                    // 滑动距离过大时不触发点击翻页
+                    if (Math.abs(touchStartX - (e.clientX || touchStartX)) > 20) return;
                     leaf.classList.contains('flipped') ? (i === currentLeaf - 1 && prevPage()) : (i === currentLeaf && nextPage());
                 };
                 book.appendChild(leaf);
@@ -380,7 +406,7 @@
                 thumb.onclick = () => { jumpToLeaf(i); toggleSidebar(); };
                 thumb.innerHTML = `
                     <div class="w-16 h-20 bg-zinc-800 shrink-0 overflow-hidden shadow-xl rounded-md">
-                        <img src="${images[i*2]}" class="w-full h-full object-cover">
+                        <img src="${imageList[i*2]}" class="w-full h-full object-cover">
                     </div>
                     <div class="flex flex-col">
                         <span class="text-xs font-bold text-white uppercase font-mono">P${i*2+1}-${i*2+2}</span>
@@ -393,21 +419,72 @@
             updateView();
         }
 
+        function startInteraction(x, y) {
+            if(scale > baseScale * 1.2) return;
+            const rect = viewport.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const dir = x > centerX ? 'next' : 'prev';
+
+            isLongPressed = false;
+            clearTimeout(longPressTimer); 
+            clearInterval(longPressInterval);
+
+            longPressTimer = setTimeout(() => {
+                isLongPressed = true;
+                longPressInterval = setInterval(() => {
+                    const moved = dir === 'next' ? nextPage() : prevPage();
+                    if (!moved) clearInterval(longPressInterval);
+                }, 500);
+                dir === 'next' ? nextPage() : prevPage();
+            }, 500);
+        }
+
+        function endInteraction() {
+            clearTimeout(longPressTimer); 
+            clearInterval(longPressInterval);
+        }
+
+        window.addEventListener('mouseup', endInteraction);
+        window.addEventListener('touchend', (e) => {
+            endInteraction();
+            if(scale > baseScale * 1.2 || isLongPressed) return;
+            const touch = e.changedTouches[0];
+            const diffX = touch.clientX - touchStartX;
+            // 简单滑动检测
+            if (Math.abs(diffX) > 60) {
+                diffX < 0 ? nextPage() : prevPage();
+            }
+        });
+
+        function playFlipEffect() { 
+            flipAudio.currentTime = 0; 
+            flipAudio.play().catch(e => console.log("Audio play blocked")); 
+        }
+
         function onImgErr(img, n) {
             img.onerror = null;
-            img.src = `https://placehold.jp/24/333333/ffffff/1000x1414.png?text=PAGE+${n}`;
+            img.src = `https://image.dummyjson.com/1000x1414?text=PAGE+${n}`;
+        }
+
+        function manageImageLoading() {
+            const leaves = document.querySelectorAll('.page');
+            leaves.forEach((leaf, index) => {
+                const imgs = leaf.querySelectorAll('img');
+                if (Math.abs(index - currentLeaf) <= 1) {
+                    imgs.forEach(img => {
+                        const ds = img.getAttribute('data-src');
+                        if (ds && img.src !== ds) img.src = ds;
+                    });
+                }
+            });
         }
 
         function fitToScreen() {
             const vpW = window.innerWidth - 20; 
             const vpH = window.innerHeight - 160; 
-            
-            // 封面和封底，或者是明确的单页模式，均使用单页目标宽度进行满屏适配
-            const isSingle = !isDoublePageMode || (currentLeaf === 0 || currentLeaf === totalLeaves);
-            
+            const isSingle = !isDoublePageMode || (window.innerWidth < 768 && (currentLeaf === 0 || currentLeaf === totalLeaves));
             const targetW = isSingle ? 1000 : 2000; 
             const targetH = 1414; 
-            
             baseScale = Math.min(vpW / targetW, vpH / targetH);
             scale = baseScale;
             posX = 0; posY = 0;
@@ -419,7 +496,9 @@
                 playFlipEffect();
                 document.querySelectorAll('.page')[currentLeaf].classList.add('flipped');
                 currentLeaf++; updateView(); fitToScreen();
+                return true;
             }
+            return false;
         }
 
         function prevPage() {
@@ -428,10 +507,13 @@
                 currentLeaf--;
                 document.querySelectorAll('.page')[currentLeaf].classList.remove('flipped');
                 updateView(); fitToScreen();
+                return true;
             }
+            return false;
         }
 
         function jumpToLeaf(idx) {
+            playFlipEffect();
             const pages = document.querySelectorAll('.page');
             currentLeaf = idx;
             pages.forEach((p, i) => { i < idx ? p.classList.add('flipped') : p.classList.remove('flipped'); });
@@ -457,11 +539,11 @@
                 else shiftX = -500; 
             }
             book.style.transform = `translateX(${shiftX}px)`;
-            
             const pages = document.querySelectorAll('.page');
             pages.forEach((p, i) => p.style.zIndex = i < currentLeaf ? i : totalLeaves - i);
             document.getElementById('prev-btn').disabled = currentLeaf === 0;
             document.getElementById('next-btn').disabled = currentLeaf === totalLeaves;
+            manageImageLoading();
         }
 
         function togglePageMode() {
@@ -485,20 +567,19 @@
             temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
-            
             const toast = document.getElementById('toast');
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 2000);
-        }
+        }   超文本标记语言
 
-        function toggleSidebar() {
+           < !DOCTYPE html   超文本标记语言>function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
         }
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
         }
 
         function adjustZoom() {
@@ -511,9 +592,6 @@
             transformLayer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale}) rotate(${rotation}deg)`;
         }
 
-        function playFlipEffect() { flipAudio.currentTime = 0; flipAudio.play().catch(() => {}); }
-
-        const viewport = document.getElementById('viewport');
         const startMove = (x, y) => { 
             if(scale <= baseScale + 0.05) return; 
             isDragging = true; dragStartX = x - posX; dragStartY = y - posY; 
@@ -525,10 +603,17 @@
         viewport.addEventListener('mousedown', e => startMove(e.clientX, e.clientY));
         window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
         window.addEventListener('mouseup', endMove);
-        viewport.addEventListener('touchstart', e => startMove(e.touches[0].clientX, e.touches[0].clientY));
-        viewport.addEventListener('touchmove', e => { if(isDragging) e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); });
+        viewport.addEventListener('touchstart', e => {
+            if (scale > baseScale + 0.05) startMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+        viewport.addEventListener('touchmove', e => { 
+            if(isDragging) {
+                e.preventDefault(); 
+                handleMove(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
         viewport.addEventListener('touchend', endMove);
-
+        
         viewport.onwheel = e => { 
             e.preventDefault(); 
             scale = Math.min(Math.max(scale + (e.deltaY > 0 ? -0.1 : 0.1), baseScale * 0.5), baseScale * 6); 
